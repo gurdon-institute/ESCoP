@@ -56,7 +56,7 @@ public class ESCoP implements Command{
 		gui.display();
 	}
 	
-	public void run(ImagePlus imp, int cA, int cB, CorrelationCalculator.Method method, int threshA, int threshB, double maxShiftCal, int shuffleIts, boolean doScatter) {
+	public void run(ImagePlus imp, int cA, int cB, CorrelationCalculator.Method method, double threshA, double threshB, double maxOffsetCal, boolean doX, boolean doY, boolean doZ, int shuffleIts, boolean doScatter) {
 		try{
 			int frame = imp.getFrame();	//TODO: handle time series?
 
@@ -69,9 +69,9 @@ public class ESCoP implements Command{
 				roi = null;
 			}
 			
-			int maxShiftX = (int) (maxShiftCal/cal.pixelWidth);
-			int maxShiftY = (int) (maxShiftCal/cal.pixelHeight);
-			int maxShiftZ = (int) (maxShiftCal/cal.pixelDepth);
+			int maxShiftX = (int) (maxOffsetCal/cal.pixelWidth);
+			int maxShiftY = (int) (maxOffsetCal/cal.pixelHeight);
+			int maxShiftZ = (int) (maxOffsetCal/cal.pixelDepth);
 			
 			AtomicInteger count = new AtomicInteger(0);
 
@@ -87,20 +87,26 @@ public class ESCoP implements Command{
 			};
 			timer.scheduleAtFixedRate(countUpdate, 200L, 200L);
 			
-			for(int shift=-maxShiftX;shift<=maxShiftX;shift++){
-				CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB, shift,CorrelationCalculator.Axis.X, count );
-				calculators.add( calc );
-				executor.execute( calc );
+			if(doX){
+				for(int shift=-maxShiftX;shift<=maxShiftX;shift++){
+					CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB, shift,CorrelationCalculator.Axis.X, count );
+					calculators.add( calc );
+					executor.execute( calc );
+				}
 			}
-			for(int shift=-maxShiftY;shift<=maxShiftY;shift++){
-				CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB,  shift,CorrelationCalculator.Axis.Y, count );
-				calculators.add( calc );
-				executor.execute( calc );
+			if(doY){
+				for(int shift=-maxShiftY;shift<=maxShiftY;shift++){
+					CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB,  shift,CorrelationCalculator.Axis.Y, count );
+					calculators.add( calc );
+					executor.execute( calc );
+				}
 			}
-			for(int shift=-maxShiftZ;shift<=maxShiftZ;shift++){
-				CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB,  shift,CorrelationCalculator.Axis.Z, count );
-				calculators.add( calc );
-				executor.execute( calc );
+			if(doZ){
+				for(int shift=-maxShiftZ;shift<=maxShiftZ;shift++){
+					CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB,  shift,CorrelationCalculator.Axis.Z, count );
+					calculators.add( calc );
+					executor.execute( calc );
+				}
 			}
 			executor.shutdown();
 			try {
@@ -112,9 +118,9 @@ public class ESCoP implements Command{
 			
 			if(cancelled) return;
 
-			double[][] resultX = new double[2][2*maxShiftX+1];
-			double[][] resultY = new double[2][2*maxShiftY+1];
-			double[][] resultZ = new double[2][2*maxShiftZ+1];
+			double[][] resultX = doX?new double[2][2*maxShiftX+1]:null;
+			double[][] resultY = doY?new double[2][2*maxShiftY+1]:null;
+			double[][] resultZ = doZ?new double[2][2*maxShiftZ+1]:null;
 			for(CorrelationCalculator calc:calculators){
 				if(calc.stop) return;
 				Axis axis = calc.getAxis();
@@ -216,11 +222,9 @@ public class ESCoP implements Command{
 	
 	private void plotCCF(String title, double[][] resultX, double[][] resultY, double[][] resultZ, double[] confidenceInterval, String unit){
 		DefaultXYDataset dataset = new DefaultXYDataset();
-		dataset.addSeries( "X", resultX );
-		dataset.addSeries( "Y", resultY );
-		dataset.addSeries( "Z", resultZ );
-		
-		Color[] colours = new Color[]{Color.RED, Color.GREEN, Color.BLUE};
+		if(resultX!=null) dataset.addSeries( "X", resultX );
+		if(resultY!=null) dataset.addSeries( "Y", resultY );
+		if(resultZ!=null) dataset.addSeries( "Z", resultZ );
 		
 		JFreeChart chart = ChartFactory.createXYLineChart("", "Offset ("+unit+")", "R", dataset, PlotOrientation.VERTICAL, true, true, false);
 		
@@ -234,9 +238,20 @@ public class ESCoP implements Command{
         BasicStroke stroke = new BasicStroke(0.5f);
         LegendItemCollection legend = new LegendItemCollection();
         for(int s=0;s<dataset.getSeriesCount();s++){
-        	render.setSeriesPaint(s, colours[s]);
+        	String key = (String) dataset.getSeriesKey(s);
+        	Color colour = Color.BLACK;
+        	if(key.equals("X")){
+        		colour = Color.RED;
+        	}
+        	else if(key.equals("Y")){
+        		colour = Color.GREEN;
+        	}
+        	else if(key.equals("Z")){
+        		colour = Color.BLUE;
+        	}
+        	render.setSeriesPaint(s, colour);
         	render.setSeriesStroke(s, stroke);
-        	legend.add( new LegendItem((String) dataset.getSeriesKey(s), colours[s]) );
+        	legend.add( new LegendItem((String) dataset.getSeriesKey(s), colour) );
         }
         
         if(confidenceInterval[1]-confidenceInterval[0]>1E-9){
@@ -256,6 +271,7 @@ public class ESCoP implements Command{
 	}
 	
 	private double getFWHM(double[][] data){
+		if(data==null) return 0;
 		CurveFitter fitter = new CurveFitter(data[0], data[1]);
 		fitter.doFit(CurveFitter.GAUSSIAN);
 		double sd = fitter.getParams()[3];	//y = a + (b-a)*exp(-(x-c)*(x-c)/(2*d*d))
@@ -279,28 +295,13 @@ public class ESCoP implements Command{
 
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\3D4C.tif");
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\12-bit_2C.tif");
-		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_inj_Cy3Cy5_Position002b.tif");
+		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_inj_Cy3Cy5_Position002b.tif");
+		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\smallTest.tif");
 		
 		final ImagePlus image = HyperStackConverter.toHyperStack(img, img.getNChannels(), img.getNSlices(), img.getNFrames());
 		image.setDisplayMode(IJ.GRAYSCALE);
 		image.setPosition(1, (int)(img.getNSlices()/2f), 1);
 		image.show();
-		
-		boolean test = false;
-		if(test){
-			try{
-				final Data3D A = new Data3D(image, 1, 1);
-				final Data3D B = new Data3D(image, 2, 1);
-				int n = (int) A.size();
-				float[][] scatterData = new float[2][n];
-				for(int i=0;i<n;i++){
-					scatterData[0][i] = A.get(i);
-					scatterData[1][i] = B.get(i);
-				}
-				new ScatterPlot(scatterData, "C1", "C2").display();
-				return;
-			}catch(Exception e){System.out.println("Test did a "+e);}
-		}
 		
 		new ESCoP().run();
 	}

@@ -28,7 +28,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 	private JComboBox<Integer> comboCA, comboCB;
 	private JComboBox<CorrelationCalculator.Method> methodCombo;
 	private KSpinner offsetSpinner, itSpinner, thresholdASpinner, thresholdBSpinner;
-	private JCheckBox scatterplotTick;
+	private JCheckBox scatterplotTick, xTick, yTick, zTick;
 	private KButton okButton, cancelButton, helpButton;
 	private KLabel statusLabel;
 	
@@ -42,18 +42,22 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		final Integer[] channels = new Integer[]{1,2,3,4,5,6,7,8,9,10,11,12};
 		
 		comboCA = new JComboBox<Integer>( channels );
-		comboCA.setSelectedItem(Prefs.getInt("ESCoP.CA", 1));
+		comboCA.setSelectedItem(Prefs.get("ESCoP.CA", 1));
 		comboCB = new JComboBox<Integer>( channels );
-		comboCB.setSelectedItem(Prefs.getInt("ESCoP.CB", 2));
+		comboCB.setSelectedItem(Prefs.get("ESCoP.CB", 2));
 		
 		methodCombo = new JComboBox<CorrelationCalculator.Method>(CorrelationCalculator.Method.values());
-		methodCombo.setSelectedIndex(Prefs.getInt("ESCoP.methodi", 0));
+		methodCombo.setSelectedIndex((int) Prefs.get("ESCoP.methodi", 0));
 		
 		offsetSpinner = new KSpinner(Prefs.get("ESCoP.maxOffset", 20.0), 0, 1000.0, 1.0);
-		itSpinner = new KSpinner(Prefs.getInt("ESCoP.its", 20), 0, 1000, 1);
-		thresholdASpinner = new KSpinner(Prefs.getInt("ESCoP.thresholdA", 0), 0, Integer.MAX_VALUE, 1);
-		thresholdBSpinner = new KSpinner(Prefs.getInt("ESCoP.thresholdB", 0), 0, Integer.MAX_VALUE, 1);
+		itSpinner = new KSpinner(Prefs.get("ESCoP.its", 20), 0, 1000, 1);
+		thresholdASpinner = new KSpinner(Prefs.get("ESCoP.thresholdA", 0), 0, Integer.MAX_VALUE, 1);
+		thresholdBSpinner = new KSpinner(Prefs.get("ESCoP.thresholdB", 0), 0, Integer.MAX_VALUE, 1);
 		scatterplotTick = new JCheckBox("Scatter Plot", Prefs.get("ESCoP.scatterPlot", false));
+		
+		xTick = new JCheckBox("X", Prefs.get("ESCoP.doX", true));
+		yTick = new JCheckBox("Y", Prefs.get("ESCoP.doY", true));
+		zTick = new JCheckBox("Z", Prefs.get("ESCoP.doZ", true));
 		
 		okButton = new KButton("OK", this);
 		cancelButton = new KButton("Cancel", this);
@@ -65,6 +69,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		add( new KPanel("Threshold A:", thresholdASpinner, 10, "B:", thresholdBSpinner) );
 		add( new KPanel("Correlation Method", methodCombo) );
 		add( new KPanel("Maximum Offset (calibrated units)", offsetSpinner) );
+		add( new KPanel("Offset", xTick, yTick, zTick) );
 		add( new KPanel("Costes Randomisation Iterations", itSpinner) );
 		add( new KPanel(scatterplotTick) );
 		add( new KPanel(helpButton, 30, okButton, cancelButton) );
@@ -112,10 +117,13 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 			int CB = (int) comboCB.getSelectedItem();
 			CorrelationCalculator.Method method = (CorrelationCalculator.Method) methodCombo.getSelectedItem();
 			int methodi = methodCombo.getSelectedIndex();
-			int threshA = (int) thresholdASpinner.getValue();
-			int threshB = (int) thresholdBSpinner.getValue();
+			double threshA = (double) thresholdASpinner.getValue();
+			double threshB = (double) thresholdBSpinner.getValue();
 			double maxOffset = (double) offsetSpinner.getValue();
-			int its = (int) itSpinner.getValue();
+			boolean doX = xTick.isSelected();
+			boolean doY = yTick.isSelected();
+			boolean doZ = zTick.isSelected();
+			int its = (int) Math.round((double)itSpinner.getValue());
 			boolean doScatter = scatterplotTick.isSelected();
 			
 			int C = imp.getNChannels();
@@ -134,6 +142,9 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 			Prefs.set("ESCoP.CB", CB);
 			Prefs.set("ESCoP.methodi", methodi);
 			Prefs.set("ESCoP.maxOffset", maxOffset);
+			Prefs.set("ESCoP.doX", doX);
+			Prefs.set("ESCoP.doY", doY);
+			Prefs.set("ESCoP.doZ", doZ);
 			Prefs.set("ESCoP.its", its);
 			Prefs.set("ESCoP.thresholdA", threshA);
 			Prefs.set("ESCoP.thresholdB", threshB);
@@ -143,7 +154,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 			SwingWorker<Object, Void> worker = new SwingWorker<Object, Void>(){
 				public Object doInBackground(){
 					try{
-						escop.run(imp, CA, CB, method, threshA, threshB, maxOffset, its, doScatter);
+						escop.run(imp, CA, CB, method, threshA, threshB, maxOffset, doX,doY,doZ, its, doScatter);
 						setEnabled(true);
 					}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 					return null;

@@ -25,7 +25,7 @@ public class KSpinner extends JSpinner{
 		setEditor(new JSpinner.NumberEditor(this, "#0.0#"));
 		dim.width = Math.min(20 + (""+max).length()*10, 100);
 	}
-	
+
 	public Dimension getPreferredSize(){
 		return dim;
 	}
