@@ -177,5 +177,4 @@ public class Data3D {
 		return shuffle;
 	}
 	
-
 }

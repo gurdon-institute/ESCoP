@@ -28,8 +28,8 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 	private JComboBox<Integer> comboCA, comboCB;
 	private JComboBox<CorrelationCalculator.Method> methodCombo;
 	private KSpinner offsetSpinner, itSpinner, thresholdASpinner, thresholdBSpinner;
-	private JCheckBox scatterplotTick, xTick, yTick, zTick;
-	private KButton okButton, cancelButton, helpButton;
+	private JCheckBox scatterplotTick, xTick, yTick, zTick, tableTick;
+	private KButton okButton, cancelButton, helpButton, managerButton;
 	private KLabel statusLabel;
 	
 	
@@ -53,7 +53,8 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		itSpinner = new KSpinner(Prefs.get("ESCoP.its", 20), 0, 1000, 1);
 		thresholdASpinner = new KSpinner(Prefs.get("ESCoP.thresholdA", 0), 0, Integer.MAX_VALUE, 1);
 		thresholdBSpinner = new KSpinner(Prefs.get("ESCoP.thresholdB", 0), 0, Integer.MAX_VALUE, 1);
-		scatterplotTick = new JCheckBox("Scatter Plot", Prefs.get("ESCoP.scatterPlot", false));
+		scatterplotTick = new JCheckBox("Scatter Plot", Prefs.get("ESCoP.doScatter", false));
+		tableTick = new JCheckBox("Table", Prefs.get("ESCoP.table", false));
 		
 		xTick = new JCheckBox("X", Prefs.get("ESCoP.doX", true));
 		yTick = new JCheckBox("Y", Prefs.get("ESCoP.doY", true));
@@ -62,6 +63,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		okButton = new KButton("OK", this);
 		cancelButton = new KButton("Cancel", this);
 		helpButton = new KButton("Help", this);
+		managerButton = new KButton("Plot Manager", this);
 		
 		statusLabel = new KLabel();
 		
@@ -71,8 +73,9 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		add( new KPanel("Maximum Offset (calibrated units)", offsetSpinner) );
 		add( new KPanel("Offset", xTick, yTick, zTick) );
 		add( new KPanel("Costes Randomisation Iterations", itSpinner) );
-		add( new KPanel(scatterplotTick) );
+		add( new KPanel(scatterplotTick, tableTick) );
 		add( new KPanel(helpButton, 30, okButton, cancelButton) );
+//		add( new KPanel(managerButton) );
 		KPanel statusPanel = new KPanel(statusLabel);
 		statusPanel.setBackground(getBackground().darker());
 		add(statusPanel);
@@ -110,6 +113,9 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		else if(src==helpButton){
 			HelpFrame.display(this);
 		}
+		else if(src==managerButton){
+			escop.showManager();
+		}
 		else if(src==okButton){
 
 			ImagePlus imp = IJ.getImage();
@@ -125,6 +131,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 			boolean doZ = zTick.isSelected();
 			int its = (int) Math.round((double)itSpinner.getValue());
 			boolean doScatter = scatterplotTick.isSelected();
+			boolean doTable = tableTick.isSelected();
 			
 			int C = imp.getNChannels();
 			if(CA>C||CB>C){
@@ -148,13 +155,14 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 			Prefs.set("ESCoP.its", its);
 			Prefs.set("ESCoP.thresholdA", threshA);
 			Prefs.set("ESCoP.thresholdB", threshB);
-			Prefs.set("ESCoP.scatterPlot", doScatter);
+			Prefs.set("ESCoP.doScatter", doScatter);
+			Prefs.set("ESCoP.doTable", doTable);
 			
 			setEnabled(false);
 			SwingWorker<Object, Void> worker = new SwingWorker<Object, Void>(){
 				public Object doInBackground(){
 					try{
-						escop.run(imp, CA, CB, method, threshA, threshB, maxOffset, doX,doY,doZ, its, doScatter);
+						escop.run(imp, CA, CB, method, threshA, threshB, maxOffset, doX,doY,doZ, its, doScatter, doTable);
 						setEnabled(true);
 					}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 					return null;

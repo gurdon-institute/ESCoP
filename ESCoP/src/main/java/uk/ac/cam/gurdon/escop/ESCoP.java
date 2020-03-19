@@ -32,6 +32,7 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.measure.Calibration;
 import ij.measure.CurveFitter;
+import ij.measure.ResultsTable;
 import ij.plugin.HyperStackConverter;
 import ij.process.LUT;
 import uk.ac.cam.gurdon.escop.CorrelationCalculator.Axis;
@@ -47,6 +48,7 @@ public class ESCoP implements Command{
 		);
 	
 	private ESCoPGUI gui;
+	private PlotManager plotManager;
 	private ArrayList<CorrelationCalculator> calculators;
 	private boolean cancelled;
 	
@@ -56,7 +58,7 @@ public class ESCoP implements Command{
 		gui.display();
 	}
 	
-	public void run(ImagePlus imp, int cA, int cB, CorrelationCalculator.Method method, double threshA, double threshB, double maxOffsetCal, boolean doX, boolean doY, boolean doZ, int shuffleIts, boolean doScatter) {
+	public void run(ImagePlus imp, int cA, int cB, CorrelationCalculator.Method method, double threshA, double threshB, double maxOffsetCal, boolean doX, boolean doY, boolean doZ, int shuffleIts, boolean doScatter, boolean doTable) {
 		try{
 			int frame = imp.getFrame();	//TODO: handle time series?
 
@@ -143,19 +145,24 @@ public class ESCoP implements Command{
 				}
 			}
 			
-			//get cube size for Costes randomisation from FWHM for each axis
+
 			double fwhmX = getFWHM(resultX);
-			double fwhmY = getFWHM(resultY);
-			double fwhmZ = getFWHM(resultZ);
 			int fwhmXpx = (int) (fwhmX / cal.pixelWidth);
-			int fwhmYpx = (int) (fwhmY / cal.pixelHeight);
-			int fwhmZpx = (int) (fwhmZ / cal.pixelDepth);
+			int minW = (int) Math.sqrt(imp.getWidth());
 			int maxW = (int) (imp.getWidth()/2f);
+			int cubeW = (int) Math.max(minW, Math.min(fwhmXpx, maxW));
+			
+			double fwhmY = getFWHM(resultY);
+			int fwhmYpx = (int) (fwhmY / cal.pixelHeight);
+			int minH = (int) Math.sqrt(imp.getHeight());
 			int maxH = (int) (imp.getHeight()/2f);
+			int cubeH = (int) Math.max(minH, Math.min(fwhmYpx, maxH));
+			
+			double fwhmZ = getFWHM(resultZ);
+			int fwhmZpx = (int) (fwhmZ / cal.pixelDepth);
+			int minD = (int) Math.ceil(Math.sqrt(imp.getNSlices()));
 			int maxD = (int) (imp.getNSlices()/2f);
-			int cubeW = (int) Math.max(1, Math.min(fwhmXpx, maxW));
-			int cubeH = (int) Math.max(1, Math.min(fwhmYpx, maxH));
-			int cubeD = (int) Math.max(1, Math.min(fwhmZpx, maxD));
+			int cubeD = (int) Math.max(minD, Math.min(fwhmZpx, maxD));
 			
 			ExecutorService shuffleExecutor = Executors.newFixedThreadPool(nThreads);
 			ArrayList<CorrelationCalculator> shuffles = new ArrayList<CorrelationCalculator>();
@@ -181,7 +188,11 @@ public class ESCoP implements Command{
 			
 			double[] confidenceInterval = getConfidenceInterval(shuffleResults);
 			
-			plotCCF(imp.getTitle()+"-"+method+" 3D CCF", resultX, resultY, resultZ, confidenceInterval, cal.getUnit());		//TODO: add parameters used to title?
+			String dims = (doX?"X":"")+(doY?"Y":"")+(doZ?"Z":"");
+			JFreeChart plot = plotCCF(imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" CCF max offset "+maxOffsetCal+" "+cal.getUnit(), resultX, resultY, resultZ, confidenceInterval, cal.getUnit());
+
+			if(plotManager==null) plotManager = new PlotManager();
+			plotManager.add(plot);
 			
 			if(doScatter){
 				int n = (int) A.size();
@@ -206,6 +217,30 @@ public class ESCoP implements Command{
 				new ScatterPlot(scatterData, "C"+cA, "C"+cB).display();
 			}
 			
+			if(doTable){
+				ResultsTable rt = new ResultsTable();
+				String unit = " ("+cal.getUnit()+")";
+				if(resultX!=null){
+					for(int i=0;i<resultX[0].length;i++){
+						rt.setValue("X Offset"+unit, i, resultX[0][i]);
+						rt.setValue("X "+method, i, resultX[1][i]);
+					}
+				}
+				if(resultY!=null){
+					for(int i=0;i<resultY[0].length;i++){
+						rt.setValue("Y Offset"+unit, i, resultY[0][i]);
+						rt.setValue("Y "+method, i, resultY[1][i]);
+					}
+				}
+				if(resultZ!=null){
+					for(int i=0;i<resultZ[0].length;i++){
+						rt.setValue("Z Offset"+unit, i, resultZ[0][i]);
+						rt.setValue("Z "+method, i, resultZ[1][i]);
+					}
+				}
+				rt.show("ESCoP-"+imp.getTitle());
+			}
+			
 			//IJ.log("ESCoP: "+imp.getTitle());
 			//IJ.log("Estimated object size = "+fwhmX+" * "+fwhmY+" * "+fwhmZ+" "+cal.getUnit());
 			
@@ -220,7 +255,7 @@ public class ESCoP implements Command{
 	    return new double[]{mean - interval, mean + interval};
 	}
 	
-	private void plotCCF(String title, double[][] resultX, double[][] resultY, double[][] resultZ, double[] confidenceInterval, String unit){
+	private JFreeChart plotCCF(String title, double[][] resultX, double[][] resultY, double[][] resultZ, double[] confidenceInterval, String unit){
 		DefaultXYDataset dataset = new DefaultXYDataset();
 		if(resultX!=null) dataset.addSeries( "X", resultX );
 		if(resultY!=null) dataset.addSeries( "Y", resultY );
@@ -256,18 +291,35 @@ public class ESCoP implements Command{
         
         if(confidenceInterval[1]-confidenceInterval[0]>1E-9){
 	        Color confidenceColour = new Color(255,128,64, 64);
-	        XYBoxAnnotation confidenceBox = new XYBoxAnnotation(resultX[0][0], confidenceInterval[0], resultX[0][resultX[0].length-1], confidenceInterval[1], null, null, confidenceColour);
+	        //XYBoxAnnotation confidenceBox = new XYBoxAnnotation(resultX[0][0], confidenceInterval[0], resultX[0][resultX[0].length-1], confidenceInterval[1], null, null, confidenceColour);
+	        double minD = 0;
+	        double maxD = 0;
+	        if(resultX!=null){
+	        	minD = Math.min(minD, resultX[0][0]);
+	        	maxD = Math.max(maxD, resultX[0][resultX[0].length-1]);
+	        }
+	        if(resultY!=null){
+	        	minD = Math.min(minD, resultY[0][0]);
+	        	maxD = Math.max(maxD, resultY[0][resultY[0].length-1]);
+	        }
+	        if(resultZ!=null){
+	        	minD = Math.min(minD, resultZ[0][0]);
+	        	maxD = Math.max(maxD, resultZ[0][resultZ[0].length-1]);
+	        }
+	        XYBoxAnnotation confidenceBox = new XYBoxAnnotation(minD, confidenceInterval[0], maxD, confidenceInterval[1], null, null, confidenceColour);
 			render.addAnnotation(confidenceBox);
 			legend.add( new LegendItem("Costes Randomised Confidence Interval (P=0.95)", confidenceColour) );
         }
         
 		plot.setFixedLegendItems(legend);
         
-        ChartFrame frame = new ChartFrame(title, chart);
+        /*ChartFrame frame = new ChartFrame(title, chart);
         frame.pack();
 		frame.setSize( new Dimension(800, 800) );
 		frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
+		frame.setVisible(true);*/
+		
+		return chart;
 	}
 	
 	private double getFWHM(double[][] data){
@@ -287,6 +339,11 @@ public class ESCoP implements Command{
 			}
 		}
 		gui.dispose();
+	}
+	
+	public void showManager(){
+		if(plotManager==null) plotManager = new PlotManager();
+		plotManager.display();
 	}
 	
 	public static void main(String[] arg){
