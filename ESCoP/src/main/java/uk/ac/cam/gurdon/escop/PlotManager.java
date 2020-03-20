@@ -1,18 +1,15 @@
 package uk.ac.cam.gurdon.escop;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Vector;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JTextPane;
+import javax.swing.JScrollPane;
 
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 
 import uk.ac.cam.gurdon.kgui.KPanel;
@@ -22,11 +19,8 @@ public class PlotManager extends JFrame{
 	private static final long serialVersionUID = 2330418802595468638L;
 	private static final Dimension DIM = new Dimension(800, 800);
 	
-	private ArrayList<JFreeChart> plots;
-	private Vector<String> list;
-	private JPanel cardPanel;
-	private JTextPane listPane;
-	private CardLayout card;
+	private ArrayList<PlotThumb> plotThumbs;
+	private JPanel thumbPanel;
 	private KPanel controlPanel;
 	
 	
@@ -34,24 +28,18 @@ public class PlotManager extends JFrame{
 		super("Plot Manager");
 		setLayout(new BorderLayout());
 		
-		list = new Vector<String>();
-		listPane = new JTextPane();
-		add(listPane, BorderLayout.WEST);
+		JPanel layout = new JPanel();
+		add(layout, BorderLayout.CENTER);
 		
-		card = new CardLayout();
-		cardPanel = new JPanel();
-		cardPanel.setLayout(card);
-		add(cardPanel, BorderLayout.CENTER);
-		
+		thumbPanel = new JPanel();
+		thumbPanel.setLayout(new BoxLayout(thumbPanel, BoxLayout.Y_AXIS));
+		JScrollPane scroll = new JScrollPane(thumbPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		add(scroll, BorderLayout.EAST);
+				
 		controlPanel = new KPanel("controls go here");
 		add(controlPanel, BorderLayout.SOUTH);
 		
-		plots = new ArrayList<JFreeChart>();
-	}
-	
-	private void updateList(){
-		String txt = String.join("\n", list);
-		listPane.setText(txt);
+		plotThumbs = new ArrayList<PlotThumb>();
 	}
 	
 	@Override
@@ -59,16 +47,12 @@ public class PlotManager extends JFrame{
 		return DIM;
 	}
 	
-	public void add(JFreeChart plot){
-		plots.add(plot);
-		String name = "plot "+plots.size();
-		list.add(name);
-		updateList();
-		
-		ChartPanel cp = new ChartPanel(plot);
-		cardPanel.add(cp);
-		card.addLayoutComponent( cp, name );
-		card.show(cardPanel, name);
+	public void add(JFreeChart plot, String name){
+		PlotThumb pt = new PlotThumb(plot, name);
+		plotThumbs.add(pt);
+		thumbPanel.add(pt);
+		pack();
+		repaint();
 	}
 	
 	public void display(){

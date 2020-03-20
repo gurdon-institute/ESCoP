@@ -75,7 +75,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		add( new KPanel("Costes Randomisation Iterations", itSpinner) );
 		add( new KPanel(scatterplotTick, tableTick) );
 		add( new KPanel(helpButton, 30, okButton, cancelButton) );
-//		add( new KPanel(managerButton) );
+		add( new KPanel(managerButton) );
 		KPanel statusPanel = new KPanel(statusLabel);
 		statusPanel.setBackground(getBackground().darker());
 		add(statusPanel);

@@ -2,7 +2,6 @@ package uk.ac.cam.gurdon.escop;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Timer;
@@ -14,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
@@ -189,10 +187,11 @@ public class ESCoP implements Command{
 			double[] confidenceInterval = getConfidenceInterval(shuffleResults);
 			
 			String dims = (doX?"X":"")+(doY?"Y":"")+(doZ?"Z":"");
-			JFreeChart plot = plotCCF(imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" CCF max offset "+maxOffsetCal+" "+cal.getUnit(), resultX, resultY, resultZ, confidenceInterval, cal.getUnit());
+			String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" CCF max offset "+maxOffsetCal+" "+cal.getUnit();
+			JFreeChart plot = plotCCF(plotName, resultX, resultY, resultZ, confidenceInterval, cal.getUnit());
 
 			if(plotManager==null) plotManager = new PlotManager();
-			plotManager.add(plot);
+			plotManager.add(plot, plotName);
 			
 			if(doScatter){
 				int n = (int) A.size();
@@ -359,6 +358,15 @@ public class ESCoP implements Command{
 		image.setDisplayMode(IJ.GRAYSCALE);
 		image.setPosition(1, (int)(img.getNSlices()/2f), 1);
 		image.show();
+		
+		/*boolean test = true;
+		if(test){
+			ESCoP escop = new ESCoP();
+			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, true, false, false, 20, false, false);
+			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, false, true, false, 20, false, false);
+			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, false, false, true, 20, false, false);
+			escop.showManager();
+		}*/
 		
 		new ESCoP().run();
 	}
