@@ -82,7 +82,7 @@ public class ESCoP implements Command{
 			Timer timer = new Timer();
 			TimerTask countUpdate = new TimerTask(){
 				public void run(){
-					gui.setStatus("Cross Correlation "+IJ.d2s(((count.get()+1)/(float)calculators.size())*100, 1)+"%");
+					if(gui!=null) gui.setStatus("Cross Correlation "+IJ.d2s(((count.get()+1)/(float)calculators.size())*100, 1)+"%");
 				}
 			};
 			timer.scheduleAtFixedRate(countUpdate, 200L, 200L);
@@ -187,11 +187,11 @@ public class ESCoP implements Command{
 			double[] confidenceInterval = getConfidenceInterval(shuffleResults);
 			
 			String dims = (doX?"X":"")+(doY?"Y":"")+(doZ?"Z":"");
-			String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" CCF max offset "+maxOffsetCal+" "+cal.getUnit();
+			String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" "+maxOffsetCal+" "+cal.getUnit();
 			JFreeChart plot = plotCCF(plotName, resultX, resultY, resultZ, confidenceInterval, cal.getUnit());
 
 			if(plotManager==null) plotManager = new PlotManager();
-			plotManager.add(plot, plotName);
+			plotManager.addPlot(plot, plotName);
 			
 			if(doScatter){
 				int n = (int) A.size();
@@ -359,16 +359,17 @@ public class ESCoP implements Command{
 		image.setPosition(1, (int)(img.getNSlices()/2f), 1);
 		image.show();
 		
-		/*boolean test = true;
+		ESCoP escop = new ESCoP();
+		escop.run();
+		
+		boolean test = true;
 		if(test){
-			ESCoP escop = new ESCoP();
 			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, true, false, false, 20, false, false);
 			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, false, true, false, 20, false, false);
 			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, false, false, true, 20, false, false);
 			escop.showManager();
-		}*/
-		
-		new ESCoP().run();
+		}
+
 	}
 
 }
