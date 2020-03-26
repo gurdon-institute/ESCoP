@@ -28,7 +28,7 @@ import org.jfree.chart.JFreeChart;
 
 import uk.ac.cam.gurdon.kgui.KPanel;
 
-public class PlotHolder extends JPanel implements MouseListener, MouseMotionListener{
+public class PlotHolder extends JPanel implements MouseListener, MouseMotionListener, Comparable<PlotHolder>{
 	
 	private static final long serialVersionUID = 1542426845993960902L;
 	
@@ -44,7 +44,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	private boolean resizing = false;
 	private boolean moving = false;
     private Point dragStart  = new Point();
-	int edge = 4;
+	int edge = 8;
 		
 
 	
@@ -73,7 +73,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 		dim = new Dimension(400, 400);
 		//setSharedSize(400, 400);
 		
-		setBorder( BorderFactory.createLineBorder(Color.WHITE, edge) );	//space for dragging with events not consumes by CanvasPanel
+		setBorder( BorderFactory.createLineBorder(Color.WHITE, edge) );	//space for dragging with events not consumed by CanvasPanel
 
 		addMouseListener(this);
 		addMouseMotionListener(this);
@@ -141,55 +141,29 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	@Override
 	public void mouseMoved(MouseEvent me){
 		Point p = me.getPoint();
-		Rectangle bounds = getBounds();
-		
-		if(nearEdge(p)){
+
+		if(manager.doResize){
 			setCursor( Cursor.getPredefinedCursor( Cursor.SE_RESIZE_CURSOR) );
 		}
-		else{
-			setCursor( Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR) );
-		}
-		
-		/*if(p.x>=bounds.width-edge&&p.y>bounds.height-edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR) );
-		}
-		else if(p.x<edge&&p.y>bounds.height-edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.SW_RESIZE_CURSOR) );
-		}
-		else if(p.x<edge&&p.y<edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR) );
-		}
-		else if(p.x>=bounds.width-edge&&p.y<edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR) );
-		}
-		
-		else if(p.x<edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR) );
-		}
-		else if(p.x>=bounds.width-edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR) );
-		}
-		else if(p.y<edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR) );
-		}
-		else if(p.y>bounds.height-edge){
-			setCursor( Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR) );
+		else if(manager.doMove){
+			setCursor( Cursor.getPredefinedCursor( Cursor.MOVE_CURSOR) );
 		}
 		else{
-			setCursor( Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
-		}*/
+			setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR) );
+		}
+
 	}
 	@Override
     public void mousePressed(MouseEvent me) {
 		Point p = me.getPoint();
 		Rectangle bounds = getBounds();
 		//if(p.x>=bounds.width-edge&&p.y>bounds.height-edge){
-		if(getCursor().getType()==Cursor.SE_RESIZE_CURSOR){
+		if(manager.doResize){
 	        resizing = true;
 	        moving = false;
 	        dragStart = me.getPoint();
 		}
-		else if(getCursor().getType()==Cursor.MOVE_CURSOR){
+		else if(manager.doMove){
 	        resizing = false;
 	        moving = true;
 	        dragStart = me.getPoint();
@@ -199,23 +173,20 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
      public void mouseReleased(MouseEvent e) {
          resizing = false;
          moving = false;
-         manager.pack();
+         manager.arrange();
+        // manager.pack();
      }
 	public void mouseDragged(MouseEvent me) {
-        if (resizing) {
+        if (manager.doResize&&resizing) {
         	Point p = me.getPoint();
         	Rectangle bounds = getBounds();
-          //  if (dragLocation.getX()> getWidth()-edge && dragLocation.getY()>getHeight()-edge) {
-                //System.err.println("in");
-                setSharedSize((int)(bounds.width+(p.x-dragStart.x)), (int)(bounds.height+(p.y-dragStart.y)));
-                dragStart = p;
-           // }
+            setSharedSize((int)(bounds.width+(p.x-dragStart.x)), (int)(bounds.height+(p.y-dragStart.y)));
+            dragStart = p;
         }
-        else if(moving){	//TODO: use new positions for layout when manager.pack is called
+        else if(manager.doMove&&moving){
         	Point p = me.getPoint();
         	Rectangle bounds = getBounds();
             setLocation(bounds.x+p.x-dragStart.x, bounds.y+p.y-dragStart.y);
-            dragStart = p;
         }
     }
 
@@ -223,6 +194,17 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	public void mouseEntered(MouseEvent me) {	}
 
 	@Override
-	public void mouseExited(MouseEvent me) {	}
+	public void mouseExited(MouseEvent me) {
+		setCursor( Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
+	}
+
+	
+	
+	@Override
+	public int compareTo(PlotHolder other) {
+		if(getX()!=other.getX()) return new Integer(getX()).compareTo(other.getX());
+		else if(getY()!=other.getY()) return new Integer(getY()).compareTo(other.getY());
+		else return 0;
+	}
 	
 }
