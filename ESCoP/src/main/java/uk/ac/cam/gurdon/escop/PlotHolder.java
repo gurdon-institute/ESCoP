@@ -53,27 +53,17 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 		this.plot = plot;
 		this.name = name;
 		this.manager = manager;
-		/*BufferedImage plotImage = (BufferedImage) plot.createBufferedImage(DRAW, DRAW);
-		BufferedImage scaled = new BufferedImage(SIZE, SIZE, plotImage.getType());
-		Graphics2D g = (Graphics2D) scaled.createGraphics();
-		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-		g.drawImage(plotImage, 0,0, SIZE,SIZE, 0,0, DRAW,DRAW, null);*/
-		
-		//setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
 		setLayout(new BorderLayout());
 		nameLabel = new JLabel("<html><div style='width:200px;'>"+name+"</div></html>");
 		add(nameLabel, BorderLayout.NORTH);
-		//JLabel thumbLabel = new JLabel(new ImageIcon(scaled));
-		//add(thumbLabel);
-		//add(Box.createVerticalStrut(20));
 		
 		cp = new ChartPanel(plot);
 		add(cp, BorderLayout.CENTER);
 		
 		dim = new Dimension(400, 400);
-		//setSharedSize(400, 400);
 		
-		setBorder( BorderFactory.createLineBorder(Color.WHITE, edge) );	//space for dragging with events not consumed by CanvasPanel
+		//setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
 
 		addMouseListener(this);
 		addMouseMotionListener(this);
@@ -182,11 +172,13 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
         	Rectangle bounds = getBounds();
             setSharedSize((int)(bounds.width+(p.x-dragStart.x)), (int)(bounds.height+(p.y-dragStart.y)));
             dragStart = p;
+            manager.fitPanel();
         }
         else if(manager.doMove&&moving){
         	Point p = me.getPoint();
         	Rectangle bounds = getBounds();
             setLocation(bounds.x+p.x-dragStart.x, bounds.y+p.y-dragStart.y);
+            manager.fitPanel();
         }
     }
 

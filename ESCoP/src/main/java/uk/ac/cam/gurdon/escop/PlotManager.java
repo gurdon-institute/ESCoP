@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -15,11 +16,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -28,11 +31,13 @@ import javax.swing.SwingUtilities;
 
 import org.jfree.chart.JFreeChart;
 
+import ij.ImagePlus;
+import ij.process.ColorProcessor;
 import uk.ac.cam.gurdon.kgui.KButton;
 import uk.ac.cam.gurdon.kgui.KPanel;
 
 
-public class PlotManager extends JFrame{
+public class PlotManager extends JFrame implements ActionListener{
 
 	private static final long serialVersionUID = 2330418802595468638L;
 	private static final Dimension DIM = new Dimension(800, 800);
@@ -71,55 +76,90 @@ public class PlotManager extends JFrame{
 		setLayout(new BorderLayout());
 		
 		layoutPanel = new LayoutPanel();
+		layoutPanel.setBackground(Color.WHITE);
 
-		JScrollPane scroll = new JScrollPane(layoutPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		JPanel main = new JPanel();
+		main.add(layoutPanel);
+		main.add(Box.createGlue());
+		JScrollPane scroll = new JScrollPane(main, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		add(scroll, BorderLayout.CENTER);
 		
-		ActionListener toolButtonListener = new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent ae){
-				KButton src = (KButton) ae.getSource();
-				if(src==moveTool){
-					doMove = !doMove;
-					doResize = false;
-				}
-				else if(src==resizeTool){
-					doResize = !doResize;
-					doMove = false;
-				}
-				
-				moveTool.setBackground(doMove?Color.GREEN:Color.GRAY);
-				resizeTool.setBackground(doResize?Color.GREEN:Color.GRAY);
-				
-				for(PlotHolder ph:plotHolders){
-					ph.cp.setDomainZoomable(!doMove&&!doResize);
-					ph.cp.setRangeZoomable(!doMove&&!doResize);
-				}
-				
-			}
-		};
-		
-		moveTool = new KButton("Move", toolButtonListener);
+		moveTool = new KButton("Move", this);
 		moveTool.setBackground(Color.GRAY);
-		resizeTool = new KButton("Resize", toolButtonListener);
+		resizeTool = new KButton("Resize", this);
 		resizeTool.setBackground(Color.GRAY);
-		controlPanel = new KPanel(moveTool, 20, resizeTool);
+		
+		autoButton = new KButton("Auto", this);
+		captureButton = new KButton("Capture", this);
+		
+		controlPanel = new KPanel(moveTool, resizeTool, 40, autoButton, 10, captureButton);
 		add(controlPanel, BorderLayout.SOUTH);
 		
 		plotHolders = new ArrayList<PlotHolder>();
 		
-		/*addComponentListener(new ComponentAdapter(){
-			@Override
-			public void componentResized(ComponentEvent ce){
-				arrange();
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent ae){
+		KButton src = (KButton) ae.getSource();
+		
+		if(src==moveTool||src==resizeTool){
+			if(src==moveTool){
+				doMove = !doMove;
+				doResize = false;
 			}
-		});*/
+			else if(src==resizeTool){
+				doResize = !doResize;
+				doMove = false;
+			}
+			
+			moveTool.setBackground(doMove?Color.GREEN:Color.GRAY);
+			resizeTool.setBackground(doResize?Color.GREEN:Color.GRAY);
+			
+			for(PlotHolder ph:plotHolders){
+				ph.cp.setDomainZoomable(!doMove&&!doResize);
+				ph.cp.setRangeZoomable(!doMove&&!doResize);
+			}
+		}
+		else if(src==autoButton){
+			autoLayout();
+		}
+		else if(src==captureButton){
+			fitPanel();
+			BufferedImage bi = new BufferedImage(layoutPanel.getWidth(), layoutPanel.getHeight(), BufferedImage.TYPE_INT_RGB);
+			Graphics g = bi.getGraphics();
+			layoutPanel.paint(g);
+			ColorProcessor ip = new ColorProcessor(bi);
+			new ImagePlus("ESCoP Plots", ip).show();
+		}
+		
+	}
+	
+	public void autoLayout(){
+		Rectangle bounds = getBounds();
+		int x = 0;
+		int y = 0;
+		for(PlotHolder ph:plotHolders){
+			int w = ph.getWidth();
+			int h = ph.getHeight();
+			if(x+w>bounds.width&&y+h<bounds.height){
+				x = 0;
+				y += h;
+			}
+			ph.setLocation(x,y);
+			x += w;
+			y = 0;
+		}
+		fitPanel();
+	}
+	
+	void fitPanel(){
+		Dimension dim = layoutPanel.getPreferredSize();
+		layoutPanel.setSize(dim);
+		validate();
 	}
 	
 	public void arrange(){
-		
-		//Collections.sort(plotHolders);
-		
 		for(PlotHolder ph:plotHolders){
 			int x = ph.getX();
 			int y = ph.getY();
@@ -149,7 +189,6 @@ public class PlotManager extends JFrame{
 			ph.setLocation(x,y);
 			
 		}
-		//repaint();
 		validate();
 	}
 	
@@ -185,6 +224,8 @@ public class PlotManager extends JFrame{
 			setLocationRelativeTo(null);
 			setVisible(true);
 			layoutPanel.setLayout(null);
+			autoLayout();
+			setSize(getWidth()+4, getHeight()+4);	//FIXME: hack to stop unnecessary scrollbars
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	
