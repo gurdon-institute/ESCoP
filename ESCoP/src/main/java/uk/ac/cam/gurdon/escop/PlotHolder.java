@@ -38,7 +38,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	private Dimension dim;
 	
 	private JLabel nameLabel;
-	private ChartPanel cp;
+	ChartPanel cp;
 	
 
 	private boolean resizing = false;
@@ -77,6 +77,9 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		
+		cp.addMouseListener(this);
+		cp.addMouseMotionListener(this);
 	}
 	
 	public void setSharedSize(int w, int h){
@@ -155,9 +158,6 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	}
 	@Override
     public void mousePressed(MouseEvent me) {
-		Point p = me.getPoint();
-		Rectangle bounds = getBounds();
-		//if(p.x>=bounds.width-edge&&p.y>bounds.height-edge){
 		if(manager.doResize){
 	        resizing = true;
 	        moving = false;

@@ -290,7 +290,6 @@ public class ESCoP implements Command{
         
         if(confidenceInterval[1]-confidenceInterval[0]>1E-9){
 	        Color confidenceColour = new Color(255,128,64, 64);
-	        //XYBoxAnnotation confidenceBox = new XYBoxAnnotation(resultX[0][0], confidenceInterval[0], resultX[0][resultX[0].length-1], confidenceInterval[1], null, null, confidenceColour);
 	        double minD = 0;
 	        double maxD = 0;
 	        if(resultX!=null){

@@ -40,9 +40,11 @@ public class PlotManager extends JFrame{
 	ArrayList<PlotHolder> plotHolders;
 	private LayoutPanel layoutPanel;
 	private KPanel controlPanel;
-	private KButton moveTool, resizeTool;
 	
+	private KButton moveTool, resizeTool;
 	boolean doMove, doResize;
+	
+	private KButton autoButton, captureButton;
 	
 	
 	private class LayoutPanel extends JPanel{
@@ -58,9 +60,6 @@ public class PlotManager extends JFrame{
 				dim.width = Math.max(dim.width, ph.getX()+ph.getWidth());
 				dim.height = Math.max(dim.height, ph.getY()+ph.getHeight());
 			}
-
-		//	dim.width += 50;
-		//	dim.height += 50;
 			
 			return dim;
 		}
@@ -91,6 +90,12 @@ public class PlotManager extends JFrame{
 				
 				moveTool.setBackground(doMove?Color.GREEN:Color.GRAY);
 				resizeTool.setBackground(doResize?Color.GREEN:Color.GRAY);
+				
+				for(PlotHolder ph:plotHolders){
+					ph.cp.setDomainZoomable(!doMove&&!doResize);
+					ph.cp.setRangeZoomable(!doMove&&!doResize);
+				}
+				
 			}
 		};
 		
@@ -144,7 +149,8 @@ public class PlotManager extends JFrame{
 			ph.setLocation(x,y);
 			
 		}
-		repaint();
+		//repaint();
+		validate();
 	}
 	
 	public Dimension getPreferredSize(){
