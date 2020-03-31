@@ -184,7 +184,6 @@ public class PlotManager extends JFrame implements ActionListener{
 					if(check==ph) continue;
 					if( check.getX()==x && check.getY()==y ){
 						x+=w;
-						//y+=h;
 						ok = false;
 					}
 				}
@@ -203,7 +202,7 @@ public class PlotManager extends JFrame implements ActionListener{
 		int n = (int) Math.round(Math.sqrt(plotHolders.size()));
 		int w = plotHolders.get(0).getWidth();
 		int h = plotHolders.get(0).getHeight();
-		Dimension dim = new Dimension(n*w+40, n*h+80);
+		Dimension dim = new Dimension(n*w+50, n*h+90);
 		
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		if(getX()+dim.width>screen.width) dim.width = screen.width-getX();
@@ -216,6 +215,7 @@ public class PlotManager extends JFrame implements ActionListener{
 			PlotHolder pt = new PlotHolder(plot, name, this);
 			plotHolders.add(pt);
 			layoutPanel.add(pt);
+			autoLayout();
 			pack();
 			display();
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
@@ -225,24 +225,34 @@ public class PlotManager extends JFrame implements ActionListener{
 		try{
 			plotHolders.remove(ph);
 			layoutPanel.remove(ph);
-			fitPanel();
+			autoLayout();
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	
 	public void display(){
 		try{
-			
+
+			layoutPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
+			pack();
+
+			Dimension dim = getPreferredSize();
+			if(dim.width<PlotHolder.DEFAULT_SIZE){
+				dim.width = PlotHolder.DEFAULT_SIZE;
+			}
+			if(dim.height<PlotHolder.DEFAULT_SIZE){
+				dim.height = PlotHolder.DEFAULT_SIZE;
+			}
+			setSize(dim);
 			
 			if(!isVisible()){ 
-				layoutPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
-				pack();
 				setLocationRelativeTo(null);
-				layoutPanel.setLayout(null);
 			}
+			layoutPanel.setLayout(null);
+			
 			setVisible(true);	//validates when already visible
 			
 			autoLayout();
-			setSize(getWidth()+4, getHeight()+4);	//FIXME: hack to stop unnecessary scrollbars
+			
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	

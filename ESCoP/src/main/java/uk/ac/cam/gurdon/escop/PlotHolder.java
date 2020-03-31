@@ -121,39 +121,6 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 		return dim;
 	}
 	
-	private boolean nearEdge(Point p){
-		Rectangle bounds = getBounds();
-		if(p.x>=bounds.width-edge&&p.y>bounds.height-edge){
-			return true;
-		}
-		else if(p.x<edge&&p.y>bounds.height-edge){
-			return true;
-		}
-		else if(p.x<edge&&p.y<edge){
-			return true;
-		}
-		else if(p.x>=bounds.width-edge&&p.y<edge){
-			return true;
-		}
-		
-		else if(p.x<edge){
-			return true;
-		}
-		else if(p.x>=bounds.width-edge){
-			return true;
-		}
-		else if(p.y<edge){
-			return true;
-		}
-		else if(p.y>bounds.height-edge){
-			return true;
-		}
-		else{
-			return false;
-		}
-
-	}
-	
 	@Override
 	public void mouseClicked(MouseEvent me){
 		int n = me.getClickCount();
