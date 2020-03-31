@@ -29,7 +29,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 	private JComboBox<CorrelationCalculator.Method> methodCombo;
 	private KSpinner offsetSpinner, itSpinner, thresholdASpinner, thresholdBSpinner;
 	private JCheckBox scatterplotTick, xTick, yTick, zTick, tableTick;
-	private KButton okButton, cancelButton, helpButton, managerButton;
+	private KButton runButton, cancelButton, helpButton, managerButton;
 	private KLabel statusLabel;
 	
 	
@@ -60,7 +60,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		yTick = new JCheckBox("Y", Prefs.get("ESCoP.doY", true));
 		zTick = new JCheckBox("Z", Prefs.get("ESCoP.doZ", true));
 		
-		okButton = new KButton("OK", this);
+		runButton = new KButton("Run", this);
 		cancelButton = new KButton("Cancel", this);
 		helpButton = new KButton("Help", this);
 		managerButton = new KButton("Plot Manager", this);
@@ -74,7 +74,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		add( new KPanel("Offset", xTick, yTick, zTick) );
 		add( new KPanel("Costes Randomisation Iterations", itSpinner) );
 		add( new KPanel(scatterplotTick, tableTick) );
-		add( new KPanel(helpButton, 30, okButton, cancelButton) );
+		add( new KPanel(helpButton, 30, runButton, cancelButton) );
 		add( new KPanel(managerButton) );
 		KPanel statusPanel = new KPanel(statusLabel);
 		statusPanel.setBackground(getBackground().darker());
@@ -100,7 +100,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 	
 	@Override
 	public void setEnabled(boolean en){
-		okButton.setEnabled(en);
+		runButton.setEnabled(en);
 	}
 	
 	@Override
@@ -116,7 +116,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		else if(src==managerButton){
 			escop.showManager();
 		}
-		else if(src==okButton){
+		else if(src==runButton){
 
 			ImagePlus imp = IJ.getImage();
 			int CA = (int) comboCA.getSelectedItem();

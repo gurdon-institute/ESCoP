@@ -73,6 +73,7 @@ public class PlotManager extends JFrame implements ActionListener{
 	
 	public PlotManager(){
 		super("Plot Manager");
+		setIconImage( Toolkit.getDefaultToolkit().getImage(getClass().getResource("logo_icon.gif")) );
 		setLayout(new BorderLayout());
 		
 		layoutPanel = new LayoutPanel();
@@ -142,13 +143,12 @@ public class PlotManager extends JFrame implements ActionListener{
 		for(PlotHolder ph:plotHolders){
 			int w = ph.getWidth();
 			int h = ph.getHeight();
-			if(x+w>bounds.width&&y+h<bounds.height){
+			if(x>0&&x+w>bounds.width){
 				x = 0;
 				y += h;
 			}
 			ph.setLocation(x,y);
 			x += w;
-			y = 0;
 		}
 		fitPanel();
 	}
@@ -157,6 +157,7 @@ public class PlotManager extends JFrame implements ActionListener{
 		Dimension dim = layoutPanel.getPreferredSize();
 		layoutPanel.setSize(dim);
 		validate();
+		repaint();
 	}
 	
 	public void arrange(){
@@ -165,7 +166,10 @@ public class PlotManager extends JFrame implements ActionListener{
 			int y = ph.getY();
 			int w = ph.getWidth();
 			int h = ph.getHeight();
-
+			
+			if(w==0) w = PlotHolder.DEFAULT_SIZE;
+			if(h==0) h = PlotHolder.DEFAULT_SIZE;
+			
 			int modX = x%w;
 			int modY = y%h;
 			x -= modX;
@@ -213,17 +217,30 @@ public class PlotManager extends JFrame implements ActionListener{
 			plotHolders.add(pt);
 			layoutPanel.add(pt);
 			pack();
-			repaint();
+			display();
+		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
+	}
+	
+	public void removePlot(PlotHolder ph){
+		try{
+			plotHolders.remove(ph);
+			layoutPanel.remove(ph);
+			fitPanel();
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
 	
 	public void display(){
 		try{
-			layoutPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
-			pack();
-			setLocationRelativeTo(null);
-			setVisible(true);
-			layoutPanel.setLayout(null);
+			
+			
+			if(!isVisible()){ 
+				layoutPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 0,0));
+				pack();
+				setLocationRelativeTo(null);
+				layoutPanel.setLayout(null);
+			}
+			setVisible(true);	//validates when already visible
+			
 			autoLayout();
 			setSize(getWidth()+4, getHeight()+4);	//FIXME: hack to stop unnecessary scrollbars
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}

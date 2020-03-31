@@ -361,7 +361,7 @@ public class ESCoP implements Command{
 		ESCoP escop = new ESCoP();
 		escop.run();
 		
-		boolean test = true;
+		boolean test = false;
 		if(test){
 			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, true, false, false, 20, false, false);
 			escop.run(image, 1, 3, CorrelationCalculator.Method.Pearson, 0.0, 0.0, 20.0, false, true, false, 20, false, false);
