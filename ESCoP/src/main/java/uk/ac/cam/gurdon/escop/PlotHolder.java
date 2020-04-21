@@ -24,6 +24,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.OverlayLayout;
 import javax.swing.SwingUtilities;
 
@@ -45,7 +46,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	private Dimension dim;
 	
 	private JPanel topPanel;
-	private JLabel nameLabel;
+	private JTextArea nameLabel;
 	private KButton closeButton;
 	ChartPanel cp;
 
@@ -69,28 +70,19 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 					manager.removePlot(PlotHolder.this);
 				}
 			}
-		}){
-			private static final long serialVersionUID = 5452134060811589782L;
-			@Override
-			public Dimension getPreferredSize(){
-				return new Dimension(15,15);
-			}
-		};
-		closeButton.setVisible(false);
-		nameLabel = new JLabel(name);
+		});
+		
+		nameLabel = new JTextArea(name);
+		nameLabel.setBackground(Color.LIGHT_GRAY);
+		nameLabel.setLineWrap(true);
+		nameLabel.setEditable(false);
+		
 		topPanel = new JPanel();
-		topPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 2,2));
+		topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
 		topPanel.setBackground(Color.LIGHT_GRAY);
-		
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new OverlayLayout(buttonPanel));
-		buttonPanel.setBackground(Color.LIGHT_GRAY);
-		buttonPanel.add(closeButton);
-		buttonPanel.add(Box.createRigidArea(closeButton.getSize()));
-		topPanel.add(buttonPanel);
-		
+		topPanel.add(closeButton);
+		topPanel.add(Box.createHorizontalStrut(5));
 		topPanel.add(nameLabel);
-		
 		add(topPanel, BorderLayout.NORTH);
 		
 		cp = new ChartPanel(plot);
@@ -112,6 +104,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 			for(PlotHolder ph:manager.plotHolders){
 				ph.setSize(w, h);
 				ph.cp.setSize(w-(2*edge), h-(2*edge)-nameLabel.getHeight());
+			ph.topPanel.setSize(w,topPanel.getHeight());	//FIXME: increase height to display text in nameLabel when shrunk
 				ph.dim = new Dimension(w,h);
 			}
 		}
@@ -135,8 +128,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	@Override
 	public void mouseMoved(MouseEvent me){
 		Point p = me.getPoint();
-		closeButton.setVisible(topPanel.contains(p));
-
+		
 		if(manager.doResize){
 			setCursor( Cursor.getPredefinedCursor( Cursor.SE_RESIZE_CURSOR) );
 		}
@@ -190,10 +182,6 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	@Override
 	public void mouseExited(MouseEvent me) {
 		setCursor( Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR) );
-		Point p = me.getPoint();
-		if(!topPanel.contains(p)){
-			closeButton.setVisible(false);
-		}
 	}
 
 	

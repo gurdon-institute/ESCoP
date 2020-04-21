@@ -22,6 +22,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.scijava.command.Command;
+import org.scijava.command.ContextCommand;
 import org.scijava.plugin.Plugin;
 
 import ij.IJ;
@@ -37,7 +38,7 @@ import uk.ac.cam.gurdon.escop.CorrelationCalculator.Axis;
 
 
 @Plugin(type = Command.class, menuPath = "Plugins>ESCoP")
-public class ESCoP implements Command{
+public class ESCoP extends ContextCommand{
 
 	static LUT HEAT = new LUT(
 			new byte[]{70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 69, 69, 68, 67, 66, 64, 63, 61, 59, 57, 55, 53, 51, 48, 45, 43, 40, 37, 34, 31, 28, 26, 23, 20, 17, 14, 12, 9, 6, 4, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 7, 11, 16, 21, 27, 32, 39, 45, 52, 60, 68, 76, 84, 92, 101, 109, 117, 126, -122, -113, -104, -96, -88, -80, -72, -64, -57, -50, -43, -37, -31, -25, -20, -16, -12, -9, -6, -4, -3, -2, -2, -3, -4, -5, -7, -10, -13, -16, -19, -23, -28, -33, -37, -42, -48, -53, -60, -66, -72, -78, -85, -91, -98, -105, -112, -118, -127, 120, 112, 103, 95, 87, 79, 71, 64, 57, 51, 45, 39, 35, 30, 27, 24, 21, 20, 19, 19, 21, 23, 27, 32, 37, 44, 51, 59, 68, 77, 86, 97, 107, 118, 125, -125, -119, -112, -106, -100, -94, -88, -82, -76, -71, -65, -59, -54, -49, -44, -39, -34, -29, -25, -21, -18, -14, -11, -8, -5, -3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -177,7 +178,7 @@ public class ESCoP implements Command{
 			} catch (InterruptedException ie) {
 				System.out.println(ie.toString());
 			}
-			gui.setStatus("");
+			gui.setStatus("Outputting results...");
 			
 			double[] shuffleResults = new double[shuffles.size()];
 			for(int s=0;s<shuffles.size();s++){
@@ -187,7 +188,10 @@ public class ESCoP implements Command{
 			double[] confidenceInterval = getConfidenceInterval(shuffleResults);
 			
 			String dims = (doX?"X":"")+(doY?"Y":"")+(doZ?"Z":"");
-			String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" "+maxOffsetCal+" "+cal.getUnit();
+			//String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" "+maxOffsetCal+" "+cal.getUnit();
+			String plotName = "this is an unreasonably long image title to test the behaviour of the PlotHolder name bar when it has a very very very long title to display";		//TEST
+			
+			
 			JFreeChart plot = plotCCF(plotName, resultX, resultY, resultZ, confidenceInterval, cal.getUnit());
 
 			if(plotManager==null) plotManager = new PlotManager();
@@ -242,6 +246,8 @@ public class ESCoP implements Command{
 			
 			//IJ.log("ESCoP: "+imp.getTitle());
 			//IJ.log("Estimated object size = "+fwhmX+" * "+fwhmY+" * "+fwhmZ+" "+cal.getUnit());
+			
+			gui.setStatus("");
 			
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
@@ -330,6 +336,7 @@ public class ESCoP implements Command{
 	}
 	
 	public void cancel(){
+		super.cancel("Cancelled");
 		cancelled = true;
 		if(calculators!=null){
 			for(CorrelationCalculator calc:calculators){
@@ -337,9 +344,11 @@ public class ESCoP implements Command{
 			}
 		}
 		gui.dispose();
+		if(plotManager!=null) plotManager.dispose();
 	}
 	
 	public void showManager(){
+		if(cancelled) return;
 		if(plotManager==null) plotManager = new PlotManager();
 		plotManager.display();
 	}
