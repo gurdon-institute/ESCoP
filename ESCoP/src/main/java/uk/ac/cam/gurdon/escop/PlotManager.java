@@ -137,6 +137,8 @@ public class PlotManager extends JFrame implements ActionListener{
 	}
 	
 	public void autoLayout(){
+		setSharedSize(PlotHolder.DEFAULT_SIZE, PlotHolder.DEFAULT_SIZE);
+
 		Rectangle bounds = getBounds();
 		int x = 0;
 		int y = 0;
@@ -210,11 +212,30 @@ public class PlotManager extends JFrame implements ActionListener{
 		return dim;
 	}
 	
+	public void setSharedSize(int w, int h){
+		if(w>=100&&h>=100){
+			for(PlotHolder ph:plotHolders){
+				ph.setSize(w, h);
+				ph.cp.setSize(w-(2*ph.edge), h-(2*ph.edge)-ph.nameLabel.getHeight());
+				
+			//ph.topPanel.setSize(w,topPanel.getHeight());	//FIXME: increase height to display text in nameLabel when shrunk
+			ph.nameLabel.setSize(w-ph.closeButton.getWidth(),ph.topPanel.getHeight());
+				
+				ph.dim = new Dimension(w,h);
+			}
+		}
+		fitPanel();
+	}
+	
 	public void addPlot(JFreeChart plot, String name){
 		try{
 			PlotHolder pt = new PlotHolder(plot, name, this);
 			plotHolders.add(pt);
 			layoutPanel.add(pt);
+			
+			
+			setSharedSize(plotHolders.get(0).getWidth(), plotHolders.get(0).getHeight());
+			
 			autoLayout();
 			pack();
 			display();

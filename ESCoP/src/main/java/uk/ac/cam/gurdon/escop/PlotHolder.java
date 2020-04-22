@@ -43,11 +43,11 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	private PlotManager manager;
 	private JFreeChart plot;
 	private String name;
-	private Dimension dim;
+	Dimension dim;
 	
-	private JPanel topPanel;
-	private JTextArea nameLabel;
-	private KButton closeButton;
+	JPanel topPanel;
+	JTextArea nameLabel;
+	KButton closeButton;
 	ChartPanel cp;
 
 	private boolean resizing = false;
@@ -99,16 +99,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 		cp.addMouseMotionListener(this);
 	}
 	
-	public void setSharedSize(int w, int h){
-		if(w>=100&&h>=100){
-			for(PlotHolder ph:manager.plotHolders){
-				ph.setSize(w, h);
-				ph.cp.setSize(w-(2*edge), h-(2*edge)-nameLabel.getHeight());
-			ph.topPanel.setSize(w,topPanel.getHeight());	//FIXME: increase height to display text in nameLabel when shrunk
-				ph.dim = new Dimension(w,h);
-			}
-		}
-	}
+	
 	
 	public Dimension getPreferredSize(){
 		return dim;
@@ -127,8 +118,6 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 	}
 	@Override
 	public void mouseMoved(MouseEvent me){
-		Point p = me.getPoint();
-		
 		if(manager.doResize){
 			setCursor( Cursor.getPredefinedCursor( Cursor.SE_RESIZE_CURSOR) );
 		}
@@ -138,7 +127,6 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 		else{
 			setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR) );
 		}
-
 	}
 	@Override
     public void mousePressed(MouseEvent me) {
@@ -164,7 +152,7 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
         if (manager.doResize&&resizing) {
         	Point p = me.getPoint();
         	Rectangle bounds = getBounds();
-            setSharedSize((int)(bounds.width+(p.x-dragStart.x)), (int)(bounds.height+(p.y-dragStart.y)));
+            manager.setSharedSize((int)(bounds.width+(p.x-dragStart.x)), (int)(bounds.height+(p.y-dragStart.y)));
             dragStart = p;
             manager.fitPanel();
         }
