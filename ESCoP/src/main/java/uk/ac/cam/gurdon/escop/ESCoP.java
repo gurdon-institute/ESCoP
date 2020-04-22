@@ -143,7 +143,6 @@ public class ESCoP extends ContextCommand{
 					resultZ[1][i] = cc;
 				}
 			}
-			
 
 			double fwhmX = getFWHM(resultX);
 			int fwhmXpx = (int) (fwhmX / cal.pixelWidth);
@@ -188,9 +187,8 @@ public class ESCoP extends ContextCommand{
 			double[] confidenceInterval = getConfidenceInterval(shuffleResults);
 			
 			String dims = (doX?"X":"")+(doY?"Y":"")+(doZ?"Z":"");
-			//String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" "+maxOffsetCal+" "+cal.getUnit();
-			String plotName = "this is an unreasonably long image title to test the behaviour of the PlotHolder name bar when it has a very very very long title to display";		//TEST
-			
+			String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" "+maxOffsetCal+" "+cal.getUnit();
+			//String plotName = "this is an unreasonably long image title to test the behaviour of the PlotHolder name bar when it has a very very very long title to display";		//TEST
 			
 			JFreeChart plot = plotCCF(plotName, resultX, resultY, resultZ, confidenceInterval, cal.getUnit());
 

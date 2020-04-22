@@ -70,7 +70,15 @@ public class PlotHolder extends JPanel implements MouseListener, MouseMotionList
 					manager.removePlot(PlotHolder.this);
 				}
 			}
-		});
+		}){
+
+			private static final long serialVersionUID = 4281594136810585310L;
+
+			@Override
+			public Dimension getPreferredSize(){
+				return new Dimension(15,15);
+			}
+		};
 		
 		nameLabel = new JTextArea(name);
 		nameLabel.setBackground(Color.LIGHT_GRAY);

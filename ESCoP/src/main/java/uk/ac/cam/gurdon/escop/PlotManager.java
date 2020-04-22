@@ -138,7 +138,6 @@ public class PlotManager extends JFrame implements ActionListener{
 	
 	public void autoLayout(){
 		setSharedSize(PlotHolder.DEFAULT_SIZE, PlotHolder.DEFAULT_SIZE);
-
 		Rectangle bounds = getBounds();
 		int x = 0;
 		int y = 0;
