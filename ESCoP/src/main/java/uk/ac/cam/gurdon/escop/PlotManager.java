@@ -97,7 +97,6 @@ public class PlotManager extends JFrame implements ActionListener{
 		add(controlPanel, BorderLayout.SOUTH);
 		
 		plotHolders = new ArrayList<PlotHolder>();
-		
 	}
 	
 	@Override

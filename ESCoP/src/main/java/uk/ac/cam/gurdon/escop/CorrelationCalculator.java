@@ -111,6 +111,10 @@ public class CorrelationCalculator implements Runnable{
 		if(count!=null){	//no count for non-shifting calculator
 			count.getAndIncrement();
 		}
+
+		A = null;
+		B = null;
+		
 	}
 	
 	public int getOffset(){

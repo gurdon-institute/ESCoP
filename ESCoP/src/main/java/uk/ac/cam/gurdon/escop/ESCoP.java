@@ -6,8 +6,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -162,7 +166,25 @@ public class ESCoP extends ContextCommand{
 			int maxD = (int) (imp.getNSlices()/2f);
 			int cubeD = (int) Math.max(minD, Math.min(fwhmZpx, maxD));
 			
-			ExecutorService shuffleExecutor = Executors.newFixedThreadPool(nThreads);
+			final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(3);
+			//ExecutorService shuffleExecutor = Executors.newFixedThreadPool(nThreads);
+			ThreadPoolExecutor shuffleExecutor = new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,	queue);
+			
+			shuffleExecutor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
+				@Override
+				public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+					System.out.println("DemoTask Rejected : "+ r);
+					System.out.println("Waiting for a second");
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.out.println("adding again : "+r);
+					executor.execute(r);
+				}
+			});
+			
 			ArrayList<CorrelationCalculator> shuffles = new ArrayList<CorrelationCalculator>();
 			for(int s=0;s<shuffleIts;s++){
 				gui.setStatus("Costes Randomisation: "+(s+1)+"/"+shuffleIts);
@@ -358,7 +380,8 @@ public class ESCoP extends ContextCommand{
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\3D4C.tif");
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\12-bit_2C.tif");
 		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_inj_Cy3Cy5_Position002b.tif");
-		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\smallTest.tif");
+		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\smallTest.tif");
+		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_exp.lif - GVextract_Pos1.tif");
 		
 		final ImagePlus image = HyperStackConverter.toHyperStack(img, img.getNChannels(), img.getNSlices(), img.getNFrames());
 		image.setDisplayMode(IJ.GRAYSCALE);
