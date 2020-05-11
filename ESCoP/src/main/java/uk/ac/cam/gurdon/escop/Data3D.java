@@ -79,7 +79,7 @@ public class Data3D {
 		//	return 0;
 		//}
 		
-		x = Math.max(0, Math.min(W-1, x));	//clamp to edge values
+		x = Math.max(0, Math.min(W-1, x));	//extend edge values
 		y = Math.max(0, Math.min(H-1, y));
 		z = Math.max(0, Math.min(Z-1, z));
 

@@ -166,22 +166,19 @@ public class ESCoP extends ContextCommand{
 			int maxD = (int) (imp.getNSlices()/2f);
 			int cubeD = (int) Math.max(minD, Math.min(fwhmZpx, maxD));
 			
-			final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(3);
-			//ExecutorService shuffleExecutor = Executors.newFixedThreadPool(nThreads);
+			final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nThreads);
 			ThreadPoolExecutor shuffleExecutor = new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,	queue);
 			
 			shuffleExecutor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
 				@Override
 				public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-					System.out.println("DemoTask Rejected : "+ r);
-					System.out.println("Waiting for a second");
+					//System.out.println("Runnable Rejected : "+ r);
 					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						Thread.sleep(1000);	//wait for a second
+					} catch (InterruptedException ie) {
+						System.out.print(ie.toString()+"\n~~~~~\n"+Arrays.toString(ie.getStackTrace()).replace(",","\n"));
 					}
-					System.out.println("adding again : "+r);
-					executor.execute(r);
+					executor.execute(r);	//try again
 				}
 			});
 			
@@ -381,7 +378,7 @@ public class ESCoP extends ContextCommand{
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\12-bit_2C.tif");
 		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_inj_Cy3Cy5_Position002b.tif");
 		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\smallTest.tif");
-		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_exp.lif - GVextract_Pos1.tif");
+		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_injected_Cy3Cy5_MarkandFind Co_inj_Cy3Cy5_Position001.tif");
 		
 		final ImagePlus image = HyperStackConverter.toHyperStack(img, img.getNChannels(), img.getNSlices(), img.getNFrames());
 		image.setDisplayMode(IJ.GRAYSCALE);
