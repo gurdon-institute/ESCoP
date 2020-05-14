@@ -75,10 +75,7 @@ public class Data3D {
 	}
 	
 	public float get(int x, int y, int z){
-		//if(x<0||x>W-1||y<0||y>H-1||z<0||z>Z-1){	//get zero if out of range
-		//	return 0;
-		//}
-		
+
 		x = Math.max(0, Math.min(W-1, x));	//extend edge values
 		y = Math.max(0, Math.min(H-1, y));
 		z = Math.max(0, Math.min(Z-1, z));

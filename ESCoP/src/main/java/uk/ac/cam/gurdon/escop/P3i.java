@@ -10,4 +10,21 @@ public class P3i {
 		this.z = z;
 	}
 	
+	@Override
+	public int hashCode(){
+		return 7 * x + 13 * y + 19 * z;
+	}
+	
+	@Override
+	public boolean equals(Object other){
+		if (other == null) return false;
+		if (this == other) return true;
+        if (getClass() != other.getClass()) return false;
+        
+        P3i op = (P3i) other;
+        if(op.x==x&&op.y==y&&op.z==z) return true;
+        
+        return false;
+	}
+	
 }

@@ -166,7 +166,7 @@ public class ESCoP extends ContextCommand{
 			int maxD = (int) (imp.getNSlices()/2f);
 			int cubeD = (int) Math.max(minD, Math.min(fwhmZpx, maxD));
 			
-			final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nThreads);
+			/*final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(nThreads);
 			ThreadPoolExecutor shuffleExecutor = new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS,	queue);
 			
 			shuffleExecutor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
@@ -180,13 +180,23 @@ public class ESCoP extends ContextCommand{
 					}
 					executor.execute(r);	//try again
 				}
-			});
+			});*/
 			
+			ExecutorService shuffleExecutor = Executors.newFixedThreadPool(nThreads);
 			ArrayList<CorrelationCalculator> shuffles = new ArrayList<CorrelationCalculator>();
+			
 			for(int s=0;s<shuffleIts;s++){
 				gui.setStatus("Costes Randomisation: "+(s+1)+"/"+shuffleIts);
-				Data3D Ashuffle = A.getShuffled(cubeW,cubeH,cubeD);
-				CorrelationCalculator calc = new CorrelationCalculator( Ashuffle,B, roi, threshA,threshB );
+	
+	/////////////////////////////////////////////////////////////			//TODO: duplicate method eats memory, coordinate pair HashMap method is slow
+			//duplicate Data3D with shuffled cubes
+				//Data3D Ashuffle = A.getShuffled(cubeW,cubeH,cubeD);
+				//CorrelationCalculator calc = new CorrelationCalculator( Ashuffle,B, roi, threshA,threshB );
+				
+			//shuffled coordinate pairs method
+				CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB, cubeW,cubeH,cubeD );
+/////////////////////////////////////////////////////////////	
+				
 				shuffles.add( calc );
 				shuffleExecutor.execute( calc );
 			}
@@ -283,7 +293,7 @@ public class ESCoP extends ContextCommand{
 		if(resultY!=null) dataset.addSeries( "Y", resultY );
 		if(resultZ!=null) dataset.addSeries( "Z", resultZ );
 		
-		JFreeChart chart = ChartFactory.createXYLineChart("", "Offset ("+unit+")", "R", dataset, PlotOrientation.VERTICAL, true, true, false);
+		JFreeChart chart = ChartFactory.createXYLineChart("", "Offset ("+unit+")", "Correlation", dataset, PlotOrientation.VERTICAL, true, true, false);
 		
 		XYPlot plot = chart.getXYPlot();
 		
@@ -377,8 +387,8 @@ public class ESCoP extends ContextCommand{
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\3D4C.tif");
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\12-bit_2C.tif");
 		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_inj_Cy3Cy5_Position002b.tif");
-		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\smallTest.tif");
-		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_injected_Cy3Cy5_MarkandFind Co_inj_Cy3Cy5_Position001.tif");
+		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\smallTest.tif");
+		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_injected_Cy3Cy5_MarkandFind Co_inj_Cy3Cy5_Position001.tif");
 		
 		final ImagePlus image = HyperStackConverter.toHyperStack(img, img.getNChannels(), img.getNSlices(), img.getNFrames());
 		image.setDisplayMode(IJ.GRAYSCALE);
