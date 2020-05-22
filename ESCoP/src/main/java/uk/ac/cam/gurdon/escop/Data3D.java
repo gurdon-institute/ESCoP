@@ -1,7 +1,6 @@
 package uk.ac.cam.gurdon.escop;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 import ij.ImagePlus;
@@ -111,15 +110,6 @@ public class Data3D {
 	public long size(){
 		return W*H*Z;
 	}
-
-	public Data3D duplicate(){
-		float[][] dupVoxels = new float[voxels.length][];	//make deep copy of voxels
-		for(int z=0;z<Z;z++){
-			dupVoxels[z] = Arrays.copyOf(voxels[z], voxels[z].length);
-		}
-		Data3D dup = new Data3D(W,H,Z, dupVoxels, mean);
-		return dup;
-	}
 	
 	public void display(String title){
 		ImageStack stack = new ImageStack(W,H,Z);
@@ -130,6 +120,7 @@ public class Data3D {
 		new ImagePlus(title, stack).show();
 	}
 	
+	//cuboid shuffled copy of data
 	public Data3D getShuffled(int cubeW, int cubeH, int cubeZ){
 		Data3D shuffle = new Data3D(W, H, Z);
 		
