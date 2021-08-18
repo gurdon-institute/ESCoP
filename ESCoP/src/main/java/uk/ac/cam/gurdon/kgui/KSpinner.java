@@ -2,8 +2,10 @@ package uk.ac.cam.gurdon.kgui;
 
 import java.awt.Dimension;
 
+import javax.swing.JFormattedTextField;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.text.DefaultFormatter;
 
 public class KSpinner extends JSpinner{
 	private static final long serialVersionUID = -8997848843950051168L;
@@ -14,7 +16,13 @@ public class KSpinner extends JSpinner{
 		super();
 		SpinnerNumberModel model = new SpinnerNumberModel(value, min, max, step);
 		setModel(model);
-		setEditor(new JSpinner.NumberEditor(this, "#"));
+		
+		NumberEditor ed = new JSpinner.NumberEditor(this, "#0.0#");
+		JFormattedTextField field = (JFormattedTextField) ed.getComponent(0);
+	    DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
+	    formatter.setCommitsOnValidEdit(true);
+		setEditor(ed);
+		
 		dim.width = Math.min(20 + (""+max).length()*10, 100);
 	}
 	
@@ -22,7 +30,13 @@ public class KSpinner extends JSpinner{
 		super();
 		SpinnerNumberModel model = new SpinnerNumberModel(value, min, max, step);
 		setModel(model);
-		setEditor(new JSpinner.NumberEditor(this, "#0.0#"));
+		
+		NumberEditor ed = new JSpinner.NumberEditor(this, "#0.0#");
+		JFormattedTextField field = (JFormattedTextField) ed.getComponent(0);
+	    DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
+	    formatter.setCommitsOnValidEdit(true);
+		setEditor(ed);
+		
 		dim.width = Math.min(20 + (""+max).length()*10, 100);
 	}
 

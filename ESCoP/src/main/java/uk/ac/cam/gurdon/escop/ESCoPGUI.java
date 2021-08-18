@@ -12,10 +12,13 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Prefs;
+import ij.process.ImageProcessor;
 import uk.ac.cam.gurdon.kgui.KButton;
 import uk.ac.cam.gurdon.kgui.KLabel;
 import uk.ac.cam.gurdon.kgui.KPanel;
@@ -50,12 +53,40 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		methodCombo.setSelectedIndex((int) Prefs.get("ESCoP.methodi", 0));
 		
 		offsetSpinner = new KSpinner(Prefs.get("ESCoP.maxOffset", 20.0), 0, 1000.0, 1.0);
-		itSpinner = new KSpinner(Prefs.get("ESCoP.its", 20), 0, 1000, 1);
-		thresholdASpinner = new KSpinner(Prefs.get("ESCoP.thresholdA", 0), 0, Integer.MAX_VALUE, 1);
-		thresholdBSpinner = new KSpinner(Prefs.get("ESCoP.thresholdB", 0), 0, Integer.MAX_VALUE, 1);
-		scatterplotTick = new JCheckBox("Scatter Plot", Prefs.get("ESCoP.doScatter", false));
-		tableTick = new JCheckBox("Table", Prefs.get("ESCoP.table", false));
+		itSpinner = new KSpinner(Prefs.getInt("ESCoP.its", 20), 0, 1000, 1);
+		thresholdASpinner = new KSpinner(Prefs.getInt("ESCoP.thresholdA", 0), 0, Integer.MAX_VALUE, 1);
+		thresholdBSpinner = new KSpinner(Prefs.getInt("ESCoP.thresholdB", 0), 0, Integer.MAX_VALUE, 1);
 		
+		scatterplotTick = new JCheckBox("Scatter Plot", Prefs.get("ESCoP.doScatter", false));
+		tableTick = new JCheckBox("Results Table", Prefs.get("ESCoP.doTable", true));
+		
+		ChangeListener changel = new ChangeListener(){
+			@Override
+			public void stateChanged(ChangeEvent ce) {
+				Object src = ce.getSource();
+				if(src==thresholdASpinner){
+					int ca = (int) comboCA.getSelectedItem();
+					int ta = (int) thresholdASpinner.getValue();
+					ImagePlus imp = IJ.getImage();
+					imp.setPosition(ca, imp.getZ(), imp.getT());
+					double impMax = imp.getStatistics().max;
+					imp.getProcessor().setThreshold(ta-1, impMax, ImageProcessor.OVER_UNDER_LUT);
+					imp.updateAndDraw();
+				}
+				else if(src==thresholdBSpinner){
+					int cb = (int) comboCB.getSelectedItem();
+					int tb = (int) thresholdBSpinner.getValue();
+					ImagePlus imp = IJ.getImage();
+					imp.setPosition(cb, imp.getZ(), imp.getT());
+					double impMax = imp.getStatistics().max;
+					imp.getProcessor().setThreshold(tb-1, impMax, ImageProcessor.OVER_UNDER_LUT);
+					imp.updateAndDraw();
+				}
+			}
+		};
+		thresholdASpinner.addChangeListener(changel);
+		thresholdBSpinner.addChangeListener(changel);
+
 		xTick = new JCheckBox("X", Prefs.get("ESCoP.doX", true));
 		yTick = new JCheckBox("Y", Prefs.get("ESCoP.doY", true));
 		zTick = new JCheckBox("Z", Prefs.get("ESCoP.doZ", true));
@@ -74,8 +105,10 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 		add( new KPanel("Offset", xTick, yTick, zTick) );
 		add( new KPanel("Costes Randomisation Iterations", itSpinner) );
 		add( new KPanel(scatterplotTick, tableTick) );
+
 		add( new KPanel(helpButton, 30, runButton, cancelButton) );
 		add( new KPanel(managerButton) );
+
 		KPanel statusPanel = new KPanel(statusLabel);
 		statusPanel.setBackground(getBackground().darker());
 		add(statusPanel);
@@ -157,6 +190,7 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 			Prefs.set("ESCoP.thresholdB", threshB);
 			Prefs.set("ESCoP.doScatter", doScatter);
 			Prefs.set("ESCoP.doTable", doTable);
+
 			
 			setEnabled(false);
 			SwingWorker<Object, Void> worker = new SwingWorker<Object, Void>(){

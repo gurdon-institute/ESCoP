@@ -32,12 +32,12 @@ public class HelpFrame {
 	+ "</p>"
 	
 	+ "<p><b>Correlation Method</b><br>"
-	+ "See <a href='https://pubmed.ncbi.nlm.nih.gov/17210054/'>Bolte and Cordelieres 2006</a> for a review of colocalisation analysis methods and JACoP, an implementation of the discussed methods.<br>"
-	+ "<b>Pearson's correlation coefficient - </b>the linear correlation between intensity values calculated as their covariance divided by their total variation. "
+	+ "See <a href='https://pubmed.ncbi.nlm.nih.gov/17210054/'>Bolte and Cordelieres 2006</a> for a review of colocalisation analysis methods and JACoP, an implementation of the discussed methods. "
+	+ "<br><b>Pearson's correlation coefficient - </b>the linear correlation between intensity values calculated as their covariance divided by their total variation. "
 	+ "Values range from -1 (complete inverse correlation) to 1 (complete correlation)."
 	+ "<br><b>Manders' overlap coefficient- </b>the ratio of the sum of channel A voxel intensities for which the intensity in channel B is greater than zero to the total intensity in channel A."
 	+ "The coefficient used is M1, switching the assignments of channels A and B gives M2. <a href='https://pubmed.ncbi.nlm.nih.gov/20653013/'>Thresholds should be applied when using this method.</a>"
-	+ "Values range from 0 (no co-occurance) to 1 (complete co-occurance)."
+	+ " Values range from 0 (no co-occurance) to 1 (complete co-occurance)."
 	+ "<br><b>Li's intensity correlation quotient - </b>the ratio of positive covariance values divided by the overall products minus 0.5. "
 	+ "Values range from -0.5 (exclusion) to 0.5 (overlap)."
 	+ "</p>"
@@ -48,17 +48,17 @@ public class HelpFrame {
 	+ "</p>"
 		
 	+ "<p><b>Costes Randomisation Iterations</b><br>"
-	+ "The number of randomised tile shuffling iterations to use to calculate the confidence interval for correlation due to chance (P >= 0.95)."
-	+ "The tile size is determined by taking the full width at half maximum of the CCF to calculate the estimated size of colocalised objects."
+	+ "The number of randomised tile or cube shuffling iterations to use to calculate the confidence interval for correlation due to chance (P >= 0.95)."
+	+ "The block size is determined by taking the full width at half maximum of the CCF to calculate the estimated size of colocalised objects. "
 	+ "Set to 0 to skip this step."
 	+ "</p>"
 	
 	+ "<p><b>Scatter Plot</b><br>"
-	+ "Outputs results in a table."
+	+ "Displays voxel intensity values as a 2D binned scatter plot with adjustable precision. The plot can be colour coded by relative channel intensity or frequency."
 	+ "</p>"
 	
-	+ "<p><b>Table</b><br>"
-	+ "Displays voxel intensity values as a 2D binned scatter plot. The plot can be colour coded by relative channel intensity or frequency."
+	+ "<p><b>Results Table</b><br>"
+	+ "Displays a table of correlation coefficients at each offset, Full Width at Half Maximum (FWHM) for each dimension, and the Costes randomised confidence interval range."
 	+ "</p>"
 	
 	+ "<p><b>Plot Manager</b><br>"
@@ -66,7 +66,7 @@ public class HelpFrame {
 	+ "Double-click a plot to open it in a separate window, click the close button in the top left to remove a plot from the plot manager."
 	+ "</p>"
 
-	+ "<br><i style='font-size:10pt;'>Copyright 2020 Richard Butler. ESCoP is released under the GNU General Public License v3.</i>"
+	+ "<br><i style='font-size:10pt;'>Copyright 2020, 2021 Richard Butler. ESCoP is released under the GNU General Public License v3.</i>"
 	+ "</body></html>";
 
 	

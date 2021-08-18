@@ -12,6 +12,7 @@ public class CorrelationCalculator implements Runnable{
 	private int dx,dy,dz;
 	private Roi roi;
 	private double pearson, manders, li, thresholdA, thresholdB;
+	private long n;
 	private AtomicInteger count;
 	public boolean stop;
 	
@@ -76,7 +77,7 @@ public class CorrelationCalculator implements Runnable{
 		double AA = 0.0;
 		double BB = 0.0;
 		double icq = 0.0;
-		long n = 0;
+		n = 0;
 		for(long i=0;i<A.size();i++){
 			if(stop) return;
 			
@@ -130,6 +131,21 @@ public class CorrelationCalculator implements Runnable{
 	
 	public Axis getAxis(){
 		return axis;
+	}
+	
+	public double[] getPearsonConfidenceInterval() throws Exception{
+		double cc = Double.NaN;
+		try{
+			cc = getCorrelationCoefficient(Method.Pearson);
+		}catch(Exception e){throw e;}
+		double z = 0.5 * Math.log((1.0+cc)/(1.0-cc));	// Pearson's r transformed to z value
+		double zsd = Math.sqrt(1.0/(n-3.0));			// standard deviation of z
+		double alf = 1.96;	// 95 % confidence interval
+		double[] ciz = { z + zsd * alf,		// upper confidence interval in z-space
+						 z - zsd * alf };   // lower
+		double[] cir = { (Math.exp(2*ciz[0])-1)/(Math.exp(2*ciz[0])+1),		// upper confidence interval in r-space
+						 (Math.exp(2*ciz[1])-1)/(Math.exp(2*ciz[1])+1) };	// lower
+		return cir;
 	}
 	
 	public double getCorrelationCoefficient(Method method) throws Exception{

@@ -73,6 +73,7 @@ public class ESCoP extends ContextCommand{
 			if(roi!=null&&!roi.isArea()){
 				roi = null;
 			}
+			boolean is3D = imp.getNSlices() > 1;
 			
 			int maxShiftX = (int) (maxOffsetCal/cal.pixelWidth);
 			int maxShiftY = (int) (maxOffsetCal/cal.pixelHeight);
@@ -106,7 +107,7 @@ public class ESCoP extends ContextCommand{
 					executor.execute( calc );
 				}
 			}
-			if(doZ){
+			if(doZ&&is3D){
 				for(int shift=-maxShiftZ;shift<=maxShiftZ;shift++){
 					CorrelationCalculator calc = new CorrelationCalculator( A,B, roi, threshA,threshB,  shift,CorrelationCalculator.Axis.Z, count );
 					calculators.add( calc );
@@ -126,25 +127,38 @@ public class ESCoP extends ContextCommand{
 			double[][] resultX = doX?new double[2][2*maxShiftX+1]:null;
 			double[][] resultY = doY?new double[2][2*maxShiftY+1]:null;
 			double[][] resultZ = doZ?new double[2][2*maxShiftZ+1]:null;
+			/*double[] rconfX0 = new double[2*maxShiftX+1];	// Pearson confidence intervals
+			double[] rconfY0 = new double[2*maxShiftY+1];
+			double[] rconfZ0 = new double[2*maxShiftZ+1];
+			double[] rconfX1 = new double[2*maxShiftX+1];
+			double[] rconfY1 = new double[2*maxShiftY+1];
+			double[] rconfZ1 = new double[2*maxShiftZ+1];*/
 			for(CorrelationCalculator calc:calculators){
 				if(calc.stop) return;
 				Axis axis = calc.getAxis();
 				int shift = calc.getOffset();
 				double cc = calc.getCorrelationCoefficient(method);
+				//double[] ci = calc.getPearsonConfidenceInterval();
 				if(axis==Axis.X){
 					int i = shift+maxShiftX;
 					resultX[0][i] = shift * cal.pixelWidth;
 					resultX[1][i] = cc;
+					//rconfX0[i] = ci[0];
+					//rconfX1[i] = ci[1];
 				}
 				else if(axis==Axis.Y){
 					int i = shift+maxShiftY;
 					resultY[0][i] = shift * cal.pixelHeight;
 					resultY[1][i] = cc;
+					//rconfY0[i] = ci[0];
+					//rconfY1[i] = ci[1];
 				}
-				if(axis==Axis.Z){
+				if(is3D && axis==Axis.Z){
 					int i = shift+maxShiftZ;
 					resultZ[0][i] = shift * cal.pixelDepth;
 					resultZ[1][i] = cc;
+					//rconfZ0[i] = ci[0];
+					//rconfZ1[i] = ci[1];
 				}
 			}
 
@@ -171,7 +185,7 @@ public class ESCoP extends ContextCommand{
 			
 			shuffleExecutor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
 				@Override
-				public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+				public void rejectedExecution(Runnable r, ThreadPoolExecutor ex) {
 					//System.out.println("Runnable Rejected : "+ r);
 					try {
 						Thread.sleep(1000);	//wait for a second
@@ -207,7 +221,7 @@ public class ESCoP extends ContextCommand{
 				shuffleResults[s] = shuffles.get(s).getCorrelationCoefficient(method);
 			}
 			
-			double[] confidenceInterval = getConfidenceInterval(shuffleResults);
+			double[] confidenceInterval = getConfidenceInterval(shuffleResults);	// Costes confidence intervals
 			
 			String dims = (doX?"X":"")+(doY?"Y":"")+(doZ?"Z":"");
 			String plotName = imp.getTitle()+" "+method+" C"+cA+" vs C"+cB+" "+dims+" "+maxOffsetCal+" "+cal.getUnit();
@@ -217,6 +231,16 @@ public class ESCoP extends ContextCommand{
 
 			if(plotManager==null) plotManager = new PlotManager();
 			plotManager.addPlot(plot, plotName);
+
+			/*HashMap<String, double[]> rconf = new HashMap<String, double[]>();		// Pearson confidence intervals
+			rconf.put("X-upper", rconfX0);
+			rconf.put("X-lower", rconfX1);
+			rconf.put("Y-upper", rconfY0);
+			rconf.put("Y-lower", rconfY1);
+			rconf.put("Z-upper", rconfZ0);
+			rconf.put("Z-lower", rconfZ1);*/
+			
+			plotCCF(imp.getTitle()+"-"+method+" 3D CCF", resultX, resultY, resultZ, confidenceInterval, cal.getUnit());
 			
 			if(doScatter){
 				int n = (int) A.size();
@@ -243,32 +267,41 @@ public class ESCoP extends ContextCommand{
 			
 			if(doTable){
 				ResultsTable rt = new ResultsTable();
-				String unit = " ("+cal.getUnit()+")";
-				if(resultX!=null){
-					for(int i=0;i<resultX[0].length;i++){
-						rt.setValue("X Offset"+unit, i, resultX[0][i]);
-						rt.setValue("X "+method, i, resultX[1][i]);
-					}
+
+				gui.setStatus("");
+
+				String unit =  " ("+cal.getUnit()+")";
+				for(int i=0;i<resultX[0].length;i++){
+					rt.setValue("X Offset"+unit, i, resultX[0][i]);
+					rt.setValue("X Offset "+method.name()+" Correlation", i, resultX[1][i]);
+					rt.setValue("FWHM X"+unit, i, "");
 				}
-				if(resultY!=null){
-					for(int i=0;i<resultY[0].length;i++){
-						rt.setValue("Y Offset"+unit, i, resultY[0][i]);
-						rt.setValue("Y "+method, i, resultY[1][i]);
-					}
+				rt.setValue("FWHM X"+unit,0,fwhmX);
+				for(int i=0;i<resultY[0].length;i++){
+					rt.setValue("Y Offset"+unit, i, resultY[0][i]);
+					rt.setValue("Y Offset "+method.name()+" Correlation", i, resultY[1][i]);
+					rt.setValue("FWHM Y"+unit, i, "");
 				}
-				if(resultZ!=null){
+				rt.setValue("FWHM Y"+unit,0,fwhmY);
+				if(is3D){
 					for(int i=0;i<resultZ[0].length;i++){
 						rt.setValue("Z Offset"+unit, i, resultZ[0][i]);
-						rt.setValue("Z "+method, i, resultZ[1][i]);
+						rt.setValue("Z Offset "+method.name()+" Correlation", i, resultZ[1][i]);
+						rt.setValue("FWHM Z"+unit, i, "");
 					}
+					rt.setValue("FWHM Z"+unit,0,fwhmZ);
 				}
-				rt.show("ESCoP-"+imp.getTitle());
+				if(shuffleIts>0){
+					String pn = " (P<=0.05, n="+shuffleIts+")";
+					for(int r=0;r<rt.getCounter();r++){
+						rt.setValue("Costes Randomised Min"+pn, r, "");
+						rt.setValue("Costes Randomised Max"+pn, r, "");
+					}
+					rt.setValue("Costes Randomised Min"+pn, 0, confidenceInterval[0]);
+					rt.setValue("Costes Randomised Max"+pn, 0, confidenceInterval[1]);
+				}
+				rt.show("ESCoP "+imp.getTitle());
 			}
-			
-			//IJ.log("ESCoP: "+imp.getTitle());
-			//IJ.log("Estimated object size = "+fwhmX+" * "+fwhmY+" * "+fwhmZ+" "+cal.getUnit());
-			
-			gui.setStatus("");
 			
 		}catch(Exception e){System.out.print(e.toString()+"\n~~~~~\n"+Arrays.toString(e.getStackTrace()).replace(",","\n"));}
 	}
@@ -288,8 +321,36 @@ public class ESCoP extends ContextCommand{
 		if(resultZ!=null) dataset.addSeries( "Z", resultZ );
 		
 		JFreeChart chart = ChartFactory.createXYLineChart("", "Offset ("+unit+")", "Correlation", dataset, PlotOrientation.VERTICAL, true, true, false);
-		
 		XYPlot plot = chart.getXYPlot();
+
+		/*	// add confidence intervals for Pearson's CCF
+			BasicStroke lineStroke = new BasicStroke(1f);
+			Color redTrans = new Color(1f,0f,0f, 0.3f);
+			Color greenTrans = new Color(0f,1f,0f, 0.3f);
+			Color blueTrans = new Color(0f,0f,1f, 0.3f);
+			double r = 0.1;
+			double[] rconfX0 = rconf.get("X-lower");
+			double[] rconfX1 = rconf.get("X-upper");
+			for(int i=0;i<resultX[0].length;i++){
+				plot.addAnnotation(new XYLineAnnotation(resultX[0][i], rconfX1[i], resultX[0][i], rconfX0[i], lineStroke, redTrans) );
+				plot.addAnnotation(new XYLineAnnotation(resultX[0][i]-r, rconfX0[i], resultX[0][i]+r, rconfX0[i], lineStroke, redTrans) );
+				plot.addAnnotation(new XYLineAnnotation(resultX[0][i]-r, rconfX1[i], resultX[0][i]+r, rconfX1[i], lineStroke, redTrans) );
+			}
+			double[] rconfY0 = rconf.get("Y-lower");
+			double[] rconfY1 = rconf.get("Y-upper");
+			for(int i=0;i<resultY[0].length;i++){
+				plot.addAnnotation(new XYLineAnnotation(resultY[0][i], rconfY1[i], resultY[0][i], rconfY0[i], lineStroke, greenTrans) );
+				plot.addAnnotation(new XYLineAnnotation(resultY[0][i]-r, rconfY0[i], resultY[0][i]+r, rconfY0[i], lineStroke, greenTrans) );
+				plot.addAnnotation(new XYLineAnnotation(resultY[0][i]-r, rconfY1[i], resultY[0][i]+r, rconfY1[i], lineStroke, greenTrans) );
+			}
+			double[] rconfZ0 = rconf.get("X-lower");
+			double[] rconfZ1 = rconf.get("X-upper");
+			for(int i=0;i<resultZ[0].length;i++){
+				plot.addAnnotation(new XYLineAnnotation(resultZ[0][i], rconfZ1[i], resultZ[0][i], rconfZ0[i], lineStroke, blueTrans) );
+				plot.addAnnotation(new XYLineAnnotation(resultZ[0][i]-r, rconfZ0[i], resultZ[0][i]+r, rconfZ0[i], lineStroke, blueTrans) );
+				plot.addAnnotation(new XYLineAnnotation(resultZ[0][i]-r, rconfZ1[i], resultZ[0][i]+r, rconfZ1[i], lineStroke, blueTrans) );
+			}
+		*/
 		
 		plot.setBackgroundPaint(Color.WHITE);
     	plot.setDomainGridlinePaint(Color.GRAY);
