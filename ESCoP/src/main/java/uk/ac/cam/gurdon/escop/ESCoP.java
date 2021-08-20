@@ -271,19 +271,23 @@ public class ESCoP extends ContextCommand{
 				gui.setStatus("");
 
 				String unit =  " ("+cal.getUnit()+")";
-				for(int i=0;i<resultX[0].length;i++){
-					rt.setValue("X Offset"+unit, i, resultX[0][i]);
-					rt.setValue("X Offset "+method.name()+" Correlation", i, resultX[1][i]);
-					rt.setValue("FWHM X"+unit, i, "");
+				if(doX){
+					for(int i=0;i<resultX[0].length;i++){
+						rt.setValue("X Offset"+unit, i, resultX[0][i]);
+						rt.setValue("X Offset "+method.name()+" Correlation", i, resultX[1][i]);
+						rt.setValue("FWHM X"+unit, i, "");
+					}
+					rt.setValue("FWHM X"+unit,0,fwhmX);
 				}
-				rt.setValue("FWHM X"+unit,0,fwhmX);
+				if(doY){
 				for(int i=0;i<resultY[0].length;i++){
 					rt.setValue("Y Offset"+unit, i, resultY[0][i]);
 					rt.setValue("Y Offset "+method.name()+" Correlation", i, resultY[1][i]);
 					rt.setValue("FWHM Y"+unit, i, "");
 				}
 				rt.setValue("FWHM Y"+unit,0,fwhmY);
-				if(is3D){
+				}
+				if(doZ && is3D){
 					for(int i=0;i<resultZ[0].length;i++){
 						rt.setValue("Z Offset"+unit, i, resultZ[0][i]);
 						rt.setValue("Z Offset "+method.name()+" Correlation", i, resultZ[1][i]);
