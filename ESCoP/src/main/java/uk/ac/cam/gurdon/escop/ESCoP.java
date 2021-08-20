@@ -444,10 +444,7 @@ public class ESCoP extends ContextCommand{
 		ImageJ.main(arg);
 
 		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\3D4C.tif");
-		//ImagePlus img = new ImagePlus("E:\\test data\\coloc\\12-bit_2C.tif");
-		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_inj_Cy3Cy5_Position002b.tif");
-		//ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\smallTest.tif");
-		ImagePlus img = new ImagePlus("C:\\Users\\USER\\work\\data\\2020_02_05_Khayam\\2020_02_05_DNAcomp_20x_controls.lif - Co_injected_Cy3Cy5_MarkandFind Co_inj_Cy3Cy5_Position001.tif");
+		ImagePlus img = new ImagePlus("E:\\test data\\coloc\\12-bit_2C.tif");
 		
 		final ImagePlus image = HyperStackConverter.toHyperStack(img, img.getNChannels(), img.getNSlices(), img.getNFrames());
 		image.setDisplayMode(IJ.GRAYSCALE);

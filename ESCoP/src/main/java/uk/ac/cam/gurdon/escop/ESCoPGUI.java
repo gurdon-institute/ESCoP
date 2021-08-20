@@ -156,13 +156,13 @@ public class ESCoPGUI extends JFrame implements ActionListener{
 			int CB = (int) comboCB.getSelectedItem();
 			CorrelationCalculator.Method method = (CorrelationCalculator.Method) methodCombo.getSelectedItem();
 			int methodi = methodCombo.getSelectedIndex();
-			double threshA = (double) thresholdASpinner.getValue();
-			double threshB = (double) thresholdBSpinner.getValue();
-			double maxOffset = (double) offsetSpinner.getValue();
+			double threshA = thresholdASpinner.getDoubleValue();
+			double threshB = thresholdBSpinner.getDoubleValue();
+			double maxOffset = offsetSpinner.getDoubleValue();
 			boolean doX = xTick.isSelected();
 			boolean doY = yTick.isSelected();
 			boolean doZ = zTick.isSelected();
-			int its = (int) Math.round((double)itSpinner.getValue());
+			int its = (int) Math.round(itSpinner.getDoubleValue());
 			boolean doScatter = scatterplotTick.isSelected();
 			boolean doTable = tableTick.isSelected();
 			

@@ -40,6 +40,16 @@ public class KSpinner extends JSpinner{
 		dim.width = Math.min(20 + (""+max).length()*10, 100);
 	}
 
+	public double getDoubleValue(){
+		Object val = getValue();
+		if(val instanceof Integer){
+			return ((Integer)val).doubleValue();
+		}
+		else{
+			return ((Double)val).doubleValue();
+		}
+	}
+	
 	public Dimension getPreferredSize(){
 		return dim;
 	}
